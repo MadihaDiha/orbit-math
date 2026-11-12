@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/env";
 import { AUTH_ONLY_PATHS, isPrivatePath } from "@/lib/routes";
@@ -7,13 +7,7 @@ export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (!isSupabaseConfigured()) {
-    // Tanpa konfigurasi tidak ada sesi: halaman privat tetap dikunci.
-    if (isPrivatePath(pathname)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.search = `?next=${encodeURIComponent(pathname + search)}`;
-      return NextResponse.redirect(url);
-    }
+    // Mode Demo: tidak ada sesi server; perlindungan halaman dilakukan DemoShell di browser.
     return NextResponse.next({ request });
   }
 
@@ -24,7 +18,7 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));

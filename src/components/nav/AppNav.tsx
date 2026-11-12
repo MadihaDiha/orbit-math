@@ -21,6 +21,8 @@ import {
 import { Logo } from "@/components/cosmic/Logo";
 import { Bimo } from "@/components/bimo/Bimo";
 import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/env";
+import { demoLogout } from "@/lib/demo/backend";
 import { levelProgress } from "@/lib/levels";
 import type { AvatarColor } from "@/lib/types";
 import { Spinner } from "@/components/ui/Spinner";
@@ -51,7 +53,8 @@ export function LogoutButton({ className = "btn-danger", compact = false }: { cl
   const logout = async () => {
     setBusy(true);
     try {
-      await createClient().auth.signOut();
+      if (isSupabaseConfigured()) await createClient().auth.signOut();
+      else demoLogout(); // progres tetap tersimpan
     } finally {
       router.replace("/login");
       router.refresh();

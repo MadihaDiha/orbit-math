@@ -4,6 +4,7 @@ import { Logo } from "@/components/cosmic/Logo";
 import { Bimo } from "@/components/bimo/Bimo";
 import { BimoSays } from "@/components/bimo/BimoSays";
 import { CircleDiagram } from "@/components/circle/CircleDiagram";
+import { isSupabaseConfigured } from "@/lib/env";
 
 const TOPICS = [
   { n: "01", t: "Mengenal lingkaran", c: "#62E5F5" },
@@ -146,6 +147,21 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {!isSupabaseConfigured() && (
+        <section id="mode-demo" className="mx-auto max-w-6xl scroll-mt-8 px-4 py-6">
+          <div className="flex gap-4 rounded-3xl border border-gold/30 bg-gold/10 p-5 text-sm text-gold">
+            <FlaskConical className="shrink-0" size={22} />
+            <div>
+              <p className="font-bold">Situs ini berjalan dalam Mode Demo</p>
+              <p className="mt-1 text-gold/85">
+                Server akun (Supabase) belum dihubungkan, jadi kamu bisa langsung mencoba semua fitur tanpa email & password. Akun, XP, lencana, dan progres disimpan di
+                browser perangkat ini (bukan di server) dan tetap ada setelah keluar. Setelah Supabase dihubungkan, aplikasi otomatis memakai login asli dan database.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-soft/50">
         ORBIT MATH · Media pembelajaran Keliling Lingkaran SMP Kelas VIII

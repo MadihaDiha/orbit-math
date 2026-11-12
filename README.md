@@ -3,7 +3,9 @@
 
 **ORBIT MATH** adalah platform pembelajaran matematika interaktif untuk siswa **SMP kelas VIII** dengan materi utama **Keliling Lingkaran**. Siswa berperan sebagai penjelajah luar angkasa yang membuka wilayah galaksi satu per satu bersama **BIMO**, astronaut kecil berkostum biru-putih beraksen cyan.
 
-Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). Tidak ada login palsu: siswa **wajib registrasi/login** sebelum mengakses halaman belajar.
+Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). Siswa **wajib registrasi/login** sebelum mengakses halaman belajar.
+
+> 🧪 **Mode Demo** — Selama variabel Supabase belum diisi, ORBIT MATH berjalan otomatis dalam *Mode Demo*: siswa tetap harus "masuk" (nama, username, kelas) sebelum belajar, tetapi akun & progres disimpan di **localStorage browser** (tanpa email/password, tidak tersinkron antar-perangkat). Penilaian, XP anti-refresh, level, bintang, lencana, dan tantangan harian memakai logika yang sama dengan fungsi SQL dan bank soal yang sama (`src/content/questionBank.ts` dihasilkan dari `supabase/seed.sql` lewat `npm run gen:bank`). Begitu `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY` diisi, Mode Demo nonaktif dan aplikasi memakai Supabase Auth + database.
 
 ---
 
@@ -136,7 +138,7 @@ npm run build    # build produksi
 npm start        # menjalankan hasil build
 ```
 
-Tanpa `.env.local`, halaman publik tetap tampil dan halaman login menampilkan peringatan "Supabase belum dikonfigurasi". Halaman privat tetap terkunci (tidak ada login palsu).
+Tanpa `.env.local`, aplikasi berjalan dalam **Mode Demo** (lihat penjelasan di atas) — cocok untuk mencoba semua fitur atau demo di kelas. Untuk login asli dan penyimpanan di server, isi `.env.local` lalu jalankan ulang.
 
 ## Pengujian
 

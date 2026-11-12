@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Save } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/env";
+import { demoUpdateProfile } from "@/lib/demo/backend";
 import { rpc } from "@/lib/rpc";
 import { friendlyError } from "@/lib/errors";
 import { validateClassName, validateFullName, validateUsername } from "@/lib/validation";
@@ -34,11 +36,15 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         setErrors({ username: "Username sudah dipakai penjelajah lain." });
         return;
       }
-      const { error } = await createClient()
-        .from("profiles")
-        .update({ full_name: fullName.trim(), username: u, class_name: className.trim(), avatar_color: avatar, updated_at: new Date().toISOString() })
-        .eq("id", profile.id);
-      if (error) throw error;
+      if (isSupabaseConfigured()) {
+        const { error } = await createClient()
+          .from("profiles")
+          .update({ full_name: fullName.trim(), username: u, class_name: className.trim(), avatar_color: avatar, updated_at: new Date().toISOString() })
+          .eq("id", profile.id);
+        if (error) throw error;
+      } else {
+        demoUpdateProfile({ full_name: fullName.trim(), username: u, class_name: className.trim(), avatar_color: avatar });
+      }
       setMsg({ ok: true, text: "Profil berhasil disimpan!" });
       router.refresh();
     } catch (err) {

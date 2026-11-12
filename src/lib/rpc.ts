@@ -1,6 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/env";
+import { demoRpc } from "@/lib/demo/backend";
 import type {
   CheckResult,
   CompleteLessonResult,
@@ -18,8 +20,8 @@ async function call<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
-/** Semua penilaian dilakukan di server (fungsi PostgreSQL), bukan di browser. */
-export const rpc = {
+/** Penilaian dilakukan di server (fungsi PostgreSQL). Tanpa Supabase → Mode Demo di browser. */
+const supabaseRpc = {
   openLesson: (slug: string) => call<{ unlocked: boolean; status: string }>("open_lesson", { p_slug: slug }),
   startQuiz: (slug: string, count?: number, timeLimitSeconds?: number) =>
     call<StartedQuiz>("start_quiz", { p_slug: slug, p_count: count ?? null, p_time_limit: timeLimitSeconds ?? null }),
@@ -38,3 +40,5 @@ export const rpc = {
     ),
   usernameAvailable: (username: string) => call<boolean>("username_available", { p_username: username }),
 };
+
+export const rpc: typeof supabaseRpc = isSupabaseConfigured() ? supabaseRpc : demoRpc;

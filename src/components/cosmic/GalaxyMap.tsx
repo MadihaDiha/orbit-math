@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check, Lock, Star } from "lucide-react";
 import { MISSIONS } from "@/content/missions";
-import type { MissionState } from "@/lib/data";
+import type { MissionState } from "@/lib/progress";
 
 const POS: Record<number, { x: number; y: number; size: number }> = {
   1: { x: 9, y: 70, size: 74 },
