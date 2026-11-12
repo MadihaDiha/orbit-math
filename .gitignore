@@ -12,3 +12,5 @@ next-env.d.ts
 .DS_Store
 npm-debug.log*
 .pages-hold
+__pycache__/
+*.pyc

@@ -1,0 +1,14 @@
+[project]
+name = "orbit-math"
+version = "1.0.0"
+description = "ORBIT MATH — logika inti (rumus keliling, penilaian, XP, game) & aplikasi terminal dalam Python"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+orbit-math = "orbit_math.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -2,7 +2,7 @@
   "name": "orbit-math",
   "version": "1.0.0",
   "private": true,
-  "description": "ORBIT MATH — Explore the Galaxy, Master Mathematics! Platform belajar Keliling Lingkaran untuk SMP kelas VIII.",
+  "description": "ORBIT MATH â€” Explore the Galaxy, Master Mathematics! Platform belajar Keliling Lingkaran untuk SMP kelas VIII.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "gen:bank": "node scripts/gen-question-bank.mjs",
+    "gen:bank": "cd python && python -m orbit_math.bank",
+    "test:py": "cd python && python -m unittest discover -s tests",
     "test": "tsx --test tests/math.test.ts tests/levels.test.ts tests/validation.test.ts tests/games.test.ts tests/demo.test.ts"
   },
   "dependencies": {

@@ -7,7 +7,7 @@
 
 Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). Siswa **wajib registrasi/login** sebelum mengakses halaman belajar.
 
-> 🧪 **Mode Demo** — Selama variabel Supabase belum diisi, ORBIT MATH berjalan otomatis dalam *Mode Demo*: siswa tetap harus "masuk" (nama, username, kelas) sebelum belajar, tetapi akun & progres disimpan di **localStorage browser** (tanpa email/password, tidak tersinkron antar-perangkat). Penilaian, XP anti-refresh, level, bintang, lencana, dan tantangan harian memakai logika yang sama dengan fungsi SQL dan bank soal yang sama (`src/content/questionBank.ts` dihasilkan dari `supabase/seed.sql` lewat `npm run gen:bank`). Begitu `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY` diisi, Mode Demo nonaktif dan aplikasi memakai Supabase Auth + database.
+> 🧪 **Mode Demo** — Selama variabel Supabase belum diisi, ORBIT MATH berjalan otomatis dalam *Mode Demo*: siswa tetap harus "masuk" (nama, username, kelas) sebelum belajar, tetapi akun & progres disimpan di **localStorage browser** (tanpa email/password, tidak tersinkron antar-perangkat). Penilaian, XP anti-refresh, level, bintang, lencana, dan tantangan harian memakai logika yang sama dengan fungsi SQL dan bank soal yang sama (`src/content/questionBank.ts` dihasilkan dari `supabase/seed.sql` oleh modul Python `orbit_math.bank` lewat `npm run gen:bank`). Begitu `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY` diisi, Mode Demo nonaktif dan aplikasi memakai Supabase Auth + database.
 
 ---
 
@@ -50,6 +50,29 @@ Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). 
 - **Backend:** Supabase Auth, PostgreSQL, Row Level Security, fungsi PL/pgSQL (RPC) untuk penilaian.
 - **Pengujian:** `node:test` via `tsx`, ESLint, TypeScript compiler.
 
+## Modul Python (`python/orbit_math`)
+
+Logika inti ORBIT MATH juga tersedia sebagai paket **Python** (tanpa dependensi tambahan, Python ≥ 3.10):
+
+| Modul | Isi |
+|---|---|
+| `circle.py` | Rumus d = 2r, K = πd = 2πr, kebalikannya, jarak tempuh roda, format & parsing angka Indonesia, kalkulator langkah demi langkah |
+| `levels.py` | XP → level astronaut, progres level, bintang misi |
+| `grading.py` | Penilaian jawaban (setara fungsi SQL `grade_answer`) & penilaian satu kuis |
+| `validation.py` | Validasi registrasi/login, password, input kalkulator, proteksi rute & anti open-redirect |
+| `games.py` | Generator soal & penilaian 5 mini game |
+| `bank.py` | Membaca `supabase/seed.sql`, memvalidasi bank soal, menghasilkan `src/content/questionBank.ts` |
+| `cli.py` | **Aplikasi terminal**: kalkulator keliling, Training Zone, game Orbit Calculation, rangkuman rumus |
+
+```bash
+cd python
+python -m orbit_math                    # aplikasi terminal ORBIT MATH
+python -m orbit_math.bank --check       # validasi bank soal
+python -m unittest discover -s tests    # 35 unit test (juga memeriksa sinkron dengan TypeScript & SQL)
+```
+
+Dari root proyek: `npm run gen:bank` (generate bank soal) dan `npm run test:py`.
+
 ## Struktur Folder
 
 ```
@@ -76,7 +99,8 @@ Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). 
 │   │   ├── cosmic/ nav/ reward/ dashboard/ profile/ history/ ui/
 │   ├── content/missions.ts      # Konten materi 7 misi
 │   └── lib/                     # supabase client/server, rpc, math, levels, validasi, games
-├── tests/                       # unit test (math, level, validasi, game)
+├── python/orbit_math/           # logika inti & aplikasi terminal (Python) + python/tests
+├── tests/                       # unit test JavaScript (math, level, validasi, game, demo)
 ├── .env.example
 └── README.md
 ```

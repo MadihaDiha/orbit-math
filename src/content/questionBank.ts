@@ -1,5 +1,5 @@
-// FILE INI DIHASILKAN OTOMATIS oleh scripts/gen-question-bank.mjs dari supabase/seed.sql.
-// Jangan diedit manual â€” ubah seed.sql lalu jalankan `npm run gen:bank`.
+// FILE INI DIHASILKAN OTOMATIS oleh python/orbit_math/bank.py dari supabase/seed.sql.
+// Jangan diedit manual — ubah seed.sql lalu jalankan `npm run gen:bank`.
 import type { BankAchievement, BankGame, BankLesson, BankQuestion, BankQuiz } from "./bank-types";
 
 export const BANK_LESSONS: BankLesson[] = [
