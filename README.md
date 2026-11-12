@@ -1,6 +1,8 @@
 # ORBIT MATH 🪐
 ### *Explore the Galaxy, Master Mathematics!*
 
+🌐 **Coba langsung (Mode Demo):** https://madihadiha.github.io/orbit-math/
+
 **ORBIT MATH** adalah platform pembelajaran matematika interaktif untuk siswa **SMP kelas VIII** dengan materi utama **Keliling Lingkaran**. Siswa berperan sebagai penjelajah luar angkasa yang membuka wilayah galaksi satu per satu bersama **BIMO**, astronaut kecil berkostum biru-putih beraksen cyan.
 
 Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). Siswa **wajib registrasi/login** sebelum mengakses halaman belajar.
@@ -166,6 +168,18 @@ npm run build      # memastikan tidak ada error build
 | Evaluasi | Selesaikan Misi 1–6 → Final Exam | Navigasi nomor, timer, review, skor & pembahasan, riwayat tersimpan |
 | Logout | Keluar lalu login lagi | Progres, XP, lencana tetap |
 | RLS | Login sebagai siswa B, coba `select * from lesson_progress` via API | Hanya baris milik siswa B |
+
+## Deployment ke GitHub Pages (Mode Demo)
+
+Situs demo statis di https://madihadiha.github.io/orbit-math/ dibuat dari branch `main` dengan:
+
+```bash
+npm run build:pages          # menghasilkan folder out/ (basePath /orbit-math)
+cd out && git init -b gh-pages && git add -A && git commit -m "Deploy" \
+  && git remote add origin https://github.com/MadihaDiha/orbit-math.git && git push -f origin gh-pages
+```
+
+GitHub Pages (Settings → Pages) membaca branch `gh-pages`. Versi statis selalu berjalan dalam Mode Demo karena GitHub Pages tidak menjalankan server; untuk login asli Supabase gunakan Vercel (di bawah).
 
 ## Deployment ke Vercel
 
