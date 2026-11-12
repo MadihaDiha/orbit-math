@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getLessonProgress } from "@/lib/data";
-import { getMission } from "@/content/missions";
+import { MISSIONS, getMission } from "@/content/missions";
 import { MissionView } from "@/components/views/MissionView";
 import { DemoPage } from "@/components/demo/DemoPage";
+
+export function generateStaticParams() {
+  return MISSIONS.map((m) => ({ slug: m.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const m = getMission((await params).slug);

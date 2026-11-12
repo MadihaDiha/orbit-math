@@ -5,8 +5,7 @@ import { AppNav } from "@/components/nav/AppNav";
 import { RewardProvider } from "@/components/reward/RewardProvider";
 import { DemoShell } from "@/components/demo/DemoShell";
 
-// Halaman privat selalu dirender per permintaan berdasarkan sesi pengguna.
-export const dynamic = "force-dynamic";
+// Dengan Supabase, halaman privat otomatis dinamis karena membaca cookie sesi (getSession).
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   if (!isSupabaseConfigured()) {

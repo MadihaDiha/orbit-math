@@ -6,6 +6,10 @@ import { TrainingRunner } from "@/components/quiz/TrainingRunner";
 
 const NAMES: Record<string, string> = { "1": "Beginner Explorer", "2": "Space Navigator", "3": "Galaxy Expert" };
 
+export function generateStaticParams() {
+  return Object.keys(NAMES).map((level) => ({ level }));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ level: string }> }): Promise<Metadata> {
   const { level } = await params;
   return { title: `Training Level ${level}` };
