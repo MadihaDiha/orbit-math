@@ -261,6 +261,82 @@ body {
 @keyframes btn-shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 .btn-press:active { transform: scale(0.96); }
 
+/* ================= GALAXY DECORATION (tambahan dekorasi) ================= */
+/* body menjadi stacking context sendiri agar lapisan latar (z-index negatif: bintang &
+   dekorasi) dilukis DI ATAS gradien body namun tetap DI BELAKANG seluruh konten. */
+body { position: relative; z-index: 0; }
+
+.deco-float { animation: deco-float 7s ease-in-out infinite; }
+@keyframes deco-float { 0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); } 50% { transform: translateY(-14px) rotate(calc(var(--tilt, 0deg) + 4deg)); } }
+
+.deco-spin { animation: deco-spin 30s linear infinite; }
+@keyframes deco-spin { to { transform: rotate(360deg); } }
+
+.deco-glow { animation: deco-glow 3.4s ease-in-out infinite; }
+@keyframes deco-glow { 0%, 100% { filter: drop-shadow(0 0 4px var(--glow, #62E5F5)); opacity: 0.8; } 50% { filter: drop-shadow(0 0 14px var(--glow, #62E5F5)); opacity: 1; } }
+
+.deco-blink { animation: deco-blink 1.6s steps(1) infinite; }
+@keyframes deco-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+.deco-wave { animation: deco-wave 1.4s ease-in-out infinite; transform-box: view-box; }
+@keyframes deco-wave { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(28deg); } }
+
+.deco-beam { animation: deco-beam 2.6s ease-in-out infinite; }
+@keyframes deco-beam { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.6; } }
+
+/* UFO bergerak perlahan dari kiri ke kanan */
+.deco-ufo { animation: deco-ufo 46s linear infinite; }
+@keyframes deco-ufo {
+  0% { transform: translateX(-12vw) translateY(0); }
+  25% { transform: translateX(25vw) translateY(-18px); }
+  50% { transform: translateX(55vw) translateY(10px); }
+  75% { transform: translateX(85vw) translateY(-12px); }
+  100% { transform: translateX(115vw) translateY(0); }
+}
+
+/* Roket yang sesekali melintasi layar (diagonal, lalu jeda panjang) */
+.deco-rocket-cross { animation: deco-rocket-cross 26s ease-in-out infinite; }
+@keyframes deco-rocket-cross {
+  0% { transform: translate(-15vw, 20vh) rotate(-35deg); opacity: 0; }
+  3% { opacity: 1; }
+  22% { transform: translate(115vw, -40vh) rotate(-35deg); opacity: 1; }
+  23%, 100% { transform: translate(115vw, -40vh) rotate(-35deg); opacity: 0; }
+}
+
+/* Pesawat penjelajah melintas horizontal dengan jeda */
+.deco-ship-cross { animation: deco-ship-cross 34s linear infinite; }
+@keyframes deco-ship-cross {
+  0% { transform: translateX(110vw); opacity: 0; }
+  2% { opacity: 1; }
+  30% { transform: translateX(-20vw); opacity: 1; }
+  31%, 100% { transform: translateX(-20vw); opacity: 0; }
+}
+
+/* Komet dengan ekor panjang */
+.deco-comet { position: absolute; width: 260px; height: 3px; border-radius: 999px; opacity: 0;
+  background: linear-gradient(90deg, #FFFFFF, rgba(255, 215, 106, 0.85) 8%, rgba(141, 124, 255, 0.45) 40%, transparent);
+  filter: drop-shadow(0 0 8px rgba(255, 215, 106, 0.9)); transform: rotate(-28deg);
+  animation: deco-comet 15s ease-in infinite; }
+.deco-comet::before { content: ""; position: absolute; left: -4px; top: -4px; width: 11px; height: 11px; border-radius: 50%; background: #FFF6D0; box-shadow: 0 0 16px 4px rgba(255, 215, 106, 0.9); }
+@keyframes deco-comet {
+  0% { opacity: 0; transform: rotate(-28deg) translateX(0); }
+  2% { opacity: 1; }
+  14% { opacity: 0; transform: rotate(-28deg) translateX(-900px); }
+  100% { opacity: 0; transform: rotate(-28deg) translateX(-900px); }
+}
+
+/* Objek dekorasi di tepi layar (halaman belajar): kecil di laptop, lebih besar di layar lebar */
+.deco-edge { display: none !important; opacity: 0.7; transform: scale(0.5); }
+.deco-edge-left { transform-origin: left center; }
+.deco-edge-right { transform-origin: right center; }
+@media (min-width: 1360px) { .deco-edge { display: block !important; } }
+@media (min-width: 1536px) { .deco-edge { transform: scale(0.95); opacity: 0.8; } }
+/* Planet melayang dari latar lama kini terlihat; di layar sempit jangan sampai di belakang kartu */
+@media (max-width: 1359px) { .drift { display: none; } }
+
+/* Orbit kecil: benda mengelilingi planet */
+.deco-orbit { animation: deco-spin 12s linear infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

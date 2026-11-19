@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Nunito, Orbitron } from "next/font/google";
 import "./globals.css";
 import { Starfield } from "@/components/cosmic/Starfield";
+import { GalaxyDecoration } from "@/components/cosmic/GalaxyDecoration";
 
 const display = Orbitron({ subsets: ["latin"], variable: "--font-display", weight: ["500", "700", "800", "900"] });
 const body = Nunito({ subsets: ["latin"], variable: "--font-body", weight: ["400", "600", "700", "800", "900"] });
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="id" className={`${display.variable} ${body.variable}`}>
       <body className="font-body antialiased">
         <Starfield />
+        <GalaxyDecoration />
         {children}
       </body>
     </html>
