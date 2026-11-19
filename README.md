@@ -27,6 +27,19 @@ Semua fitur terhubung ke **Supabase** (Auth + PostgreSQL + Row Level Security). 
 
 ---
 
+## Alur Galaxy Adventure
+
+1. **Opening Screen** — tata surya: matahari di tengah dan 7 planet mengorbit, meteor, efek kamera memasuki galaksi, logo bercahaya, BIMO menyambut, tombol **MULAI PETUALANGAN**.
+2. **Perkenalan BIMO** (`/kenalan-bimo`) — dialog bertahap dengan efek mengetik; BIMO berkedip, melambai, mengangguk, bersorak, dan menggerakkan mulut saat berbicara.
+3. **Login / identitas siswa**.
+4. **Pre-test** (`/pretest`, wajib, sekali) — 10 soal pilihan ganda dengan umpan balik langsung. Planet pertama baru terbuka setelah pre-test.
+5. **Materi** — 6 planet (Pengenalan Lingkaran, Unsur Lingkaran, Rahasia Pi, Keliling Lingkaran, Rumus Rahasia, Tantangan Galaxy) + Stasiun Final, di peta **Galaxy Journey** (jalur orbit, pesawat yang bergerak ke planet aktif, status redup/bercahaya/berdenyut/centang).
+6. **Misi & permainan** — Circle Lab, Training Zone, 5 game, Tantangan Harian.
+7. **Post-test** (`/posttest`) — 10 soal paralel dengan pre-test; terbuka setelah Stasiun Final.
+8. **Hasil akhir** (`/results`) — "SELAMAT, ASTRONOT MUDA!": perbandingan pre-test vs post-test, bintang, XP, planet yang ditaklukkan, lencana.
+
+Seluruh halaman memakai latar galaksi (bintang berkedip & berkilau, nebula, meteor, partikel, planet melayang). Ada musik latar & efek suara (disintesis Web Audio, bisa dimatikan), ledakan bintang saat berhasil, dan BIMO pemandu yang memberi sapaan & petunjuk di setiap halaman.
+
 ## Fitur Utama
 
 | Area | Isi |
@@ -144,7 +157,10 @@ Buka *SQL Editor → New query*, lalu jalankan isi file berikut **berurutan**:
 1. `supabase/migrations/0001_schema.sql`
 2. `supabase/migrations/0002_rls.sql`
 3. `supabase/migrations/0003_functions.sql`
-4. `supabase/seed.sql`
+4. `supabase/migrations/0004_pretest_posttest.sql`
+5. `supabase/seed.sql`
+
+Atau cukup tempel **satu file** `supabase/setup_all.sql` (gabungan semua migrasi + seed, dihasilkan otomatis oleh `npm run gen:bank`).
 
 **Cara B — Supabase CLI**
 ```bash

@@ -186,6 +186,28 @@ export const BANK_QUIZZES: BankQuiz[] = [
     "xp_reward": 30,
     "default_count": 1,
     "shuffle": false
+  },
+  {
+    "slug": "pretest",
+    "title": "Pre-test — Cek Pengetahuan Awal",
+    "kind": "pretest",
+    "lesson_id": null,
+    "level": null,
+    "pass_score": 0,
+    "xp_reward": 20,
+    "default_count": 10,
+    "shuffle": false
+  },
+  {
+    "slug": "posttest",
+    "title": "Post-test — Misi Pulang ke Bumi",
+    "kind": "posttest",
+    "lesson_id": null,
+    "level": null,
+    "pass_score": 70,
+    "xp_reward": 100,
+    "default_count": 10,
+    "shuffle": false
   }
 ];
 
@@ -317,6 +339,22 @@ export const BANK_ACHIEVEMENTS: BankAchievement[] = [
     "icon": "star",
     "xp_reward": 100,
     "sort_order": 10
+  },
+  {
+    "slug": "pre-flight",
+    "title": "Pre-Flight Check",
+    "description": "Menyelesaikan Pre-test sebelum berangkat.",
+    "icon": "clipboard",
+    "xp_reward": 20,
+    "sort_order": 0
+  },
+  {
+    "slug": "young-astronaut",
+    "title": "Astronot Muda",
+    "description": "Menyelesaikan Post-test dan seluruh petualangan galaksi.",
+    "icon": "medal",
+    "xp_reward": 100,
+    "sort_order": 11
   }
 ];
 
@@ -2582,6 +2620,426 @@ export const BANK_QUESTIONS: BankQuestion[] = [
     "explanation": "d = K ÷ π = 94,2 ÷ 3,14 = 30 cm.",
     "illustration": null,
     "unit": "cm",
+    "sort_order": 10
+  },
+  {
+    "id": 117,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Pengertian lingkaran",
+    "difficulty": 1,
+    "prompt": "Lingkaran adalah ...",
+    "options": [
+      "kumpulan titik yang berjarak sama dari titik pusat",
+      "bangun datar dengan empat sisi sama panjang",
+      "bangun datar dengan tiga titik sudut",
+      "garis lurus yang sangat panjang"
+    ],
+    "answer": {
+      "index": 0
+    },
+    "explanation": "Lingkaran adalah kumpulan titik yang jaraknya sama terhadap satu titik pusat.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 1
+  },
+  {
+    "id": 118,
+    "quiz": "pretest",
+    "qtype": "identify",
+    "topic": "Unsur lingkaran",
+    "difficulty": 1,
+    "prompt": "Garis yang menyala pada gambar adalah ...",
+    "options": [
+      "Diameter",
+      "Jari-jari",
+      "Busur",
+      "Tali busur"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "Garis dari titik pusat ke tepi lingkaran disebut jari-jari.",
+    "illustration": "anatomy:radius",
+    "unit": null,
+    "sort_order": 2
+  },
+  {
+    "id": 119,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Jari-jari dan diameter",
+    "difficulty": 1,
+    "prompt": "Jari-jari sebuah lingkaran 8 cm. Diameternya adalah ...",
+    "options": [
+      "4 cm",
+      "8 cm",
+      "16 cm",
+      "64 cm"
+    ],
+    "answer": {
+      "index": 2
+    },
+    "explanation": "d = 2 × r = 2 × 8 = 16 cm.",
+    "illustration": "circle-r:8 cm",
+    "unit": null,
+    "sort_order": 3
+  },
+  {
+    "id": 120,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Nilai pi",
+    "difficulty": 1,
+    "prompt": "Nilai π mendekati ...",
+    "options": [
+      "2,14",
+      "3,14",
+      "4,13",
+      "1,41"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "π ≈ 3,14 atau 22/7.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 4
+  },
+  {
+    "id": 121,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Konsep keliling",
+    "difficulty": 1,
+    "prompt": "Keliling lingkaran adalah ...",
+    "options": [
+      "panjang garis lengkung yang mengelilingi lingkaran",
+      "luas daerah di dalam lingkaran",
+      "jarak dari pusat ke tepi lingkaran",
+      "garis yang melalui titik pusat"
+    ],
+    "answer": {
+      "index": 0
+    },
+    "explanation": "Keliling = panjang garis lengkung yang mengelilingi lingkaran satu putaran penuh.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 5
+  },
+  {
+    "id": 122,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Rumus keliling",
+    "difficulty": 2,
+    "prompt": "Rumus keliling lingkaran jika diketahui diameter adalah ...",
+    "options": [
+      "K = π × d",
+      "K = π × r × r",
+      "K = 2 × d",
+      "K = d ÷ π"
+    ],
+    "answer": {
+      "index": 0
+    },
+    "explanation": "K = π × d. Jika yang diketahui jari-jari, gunakan K = 2 × π × r.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 6
+  },
+  {
+    "id": 123,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Menghitung keliling",
+    "difficulty": 2,
+    "prompt": "Jari-jari lingkaran 7 cm. Kelilingnya adalah ... (π = 22/7)",
+    "options": [
+      "22 cm",
+      "44 cm",
+      "154 cm",
+      "49 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "K = 2 × 22/7 × 7 = 2 × 22 = 44 cm.",
+    "illustration": "circle-r:7 cm",
+    "unit": null,
+    "sort_order": 7
+  },
+  {
+    "id": 124,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Menghitung keliling",
+    "difficulty": 2,
+    "prompt": "Diameter lingkaran 10 cm. Kelilingnya adalah ... (π = 3,14)",
+    "options": [
+      "31,4 cm",
+      "62,8 cm",
+      "314 cm",
+      "15,7 cm"
+    ],
+    "answer": {
+      "index": 0
+    },
+    "explanation": "K = π × d = 3,14 × 10 = 31,4 cm.",
+    "illustration": "circle-d:10 cm",
+    "unit": null,
+    "sort_order": 8
+  },
+  {
+    "id": 125,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Jarak tempuh roda",
+    "difficulty": 3,
+    "prompt": "Roda berjari-jari 14 cm berputar satu kali. Jarak yang ditempuh adalah ... (π = 22/7)",
+    "options": [
+      "44 cm",
+      "88 cm",
+      "616 cm",
+      "28 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "Jarak satu putaran = keliling = 2 × 22/7 × 14 = 88 cm.",
+    "illustration": "wheel:r = 14 cm",
+    "unit": null,
+    "sort_order": 9
+  },
+  {
+    "id": 126,
+    "quiz": "pretest",
+    "qtype": "mcq",
+    "topic": "Soal cerita",
+    "difficulty": 3,
+    "prompt": "Taman berbentuk lingkaran berdiameter 20 m akan dipagari. Panjang pagar yang dibutuhkan adalah ... (π = 3,14)",
+    "options": [
+      "31,4 m",
+      "62,8 m",
+      "125,6 m",
+      "314 m"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "Panjang pagar = keliling = 3,14 × 20 = 62,8 m.",
+    "illustration": "garden:d = 20 m",
+    "unit": null,
+    "sort_order": 10
+  },
+  {
+    "id": 127,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Pengertian lingkaran",
+    "difficulty": 1,
+    "prompt": "Pernyataan yang benar tentang lingkaran adalah ...",
+    "options": [
+      "Semua titik pada lingkaran berjarak sama dari titik pusat",
+      "Lingkaran memiliki empat titik sudut",
+      "Jari-jari selalu lebih panjang dari diameter",
+      "Lingkaran tersusun dari garis-garis lurus"
+    ],
+    "answer": {
+      "index": 0
+    },
+    "explanation": "Ciri utama lingkaran: semua titiknya berjarak sama (jari-jari) dari titik pusat.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 1
+  },
+  {
+    "id": 128,
+    "quiz": "posttest",
+    "qtype": "identify",
+    "topic": "Unsur lingkaran",
+    "difficulty": 1,
+    "prompt": "Garis yang menyala pada gambar adalah ...",
+    "options": [
+      "Jari-jari",
+      "Tali busur",
+      "Diameter",
+      "Juring"
+    ],
+    "answer": {
+      "index": 2
+    },
+    "explanation": "Garis lurus yang melewati titik pusat dan menghubungkan dua titik pada lingkaran adalah diameter.",
+    "illustration": "anatomy:diameter",
+    "unit": null,
+    "sort_order": 2
+  },
+  {
+    "id": 129,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Jari-jari dan diameter",
+    "difficulty": 1,
+    "prompt": "Diameter sebuah lingkaran 18 cm. Jari-jarinya adalah ...",
+    "options": [
+      "36 cm",
+      "9 cm",
+      "18 cm",
+      "6 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "r = d ÷ 2 = 18 ÷ 2 = 9 cm.",
+    "illustration": "circle-d:18 cm",
+    "unit": null,
+    "sort_order": 3
+  },
+  {
+    "id": 130,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Nilai pi",
+    "difficulty": 1,
+    "prompt": "Bentuk pecahan yang mendekati nilai π adalah ...",
+    "options": [
+      "7/22",
+      "22/7",
+      "14/3",
+      "3/14"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "22/7 = 3,142857… sangat dekat dengan π.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 4
+  },
+  {
+    "id": 131,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Konsep keliling",
+    "difficulty": 2,
+    "prompt": "Roda yang berputar satu kali tanpa tergelincir menempuh jarak yang sama dengan ...",
+    "options": [
+      "diameter roda",
+      "jari-jari roda",
+      "keliling roda",
+      "luas roda"
+    ],
+    "answer": {
+      "index": 2
+    },
+    "explanation": "Satu putaran penuh menempuh jarak sepanjang keliling roda.",
+    "illustration": "wheel:1 putaran",
+    "unit": null,
+    "sort_order": 5
+  },
+  {
+    "id": 132,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Rumus keliling",
+    "difficulty": 2,
+    "prompt": "Rumus keliling lingkaran jika diketahui jari-jari adalah ...",
+    "options": [
+      "K = π × r",
+      "K = 2 × π × r",
+      "K = π × r × r",
+      "K = r ÷ 2"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "K = 2 × π × r, karena d = 2 × r sehingga π × d = 2 × π × r.",
+    "illustration": null,
+    "unit": null,
+    "sort_order": 6
+  },
+  {
+    "id": 133,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Menghitung keliling",
+    "difficulty": 2,
+    "prompt": "Jari-jari lingkaran 21 cm. Kelilingnya adalah ... (π = 22/7)",
+    "options": [
+      "66 cm",
+      "132 cm",
+      "1.386 cm",
+      "42 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "K = 2 × 22/7 × 21 = 2 × 22 × 3 = 132 cm.",
+    "illustration": "circle-r:21 cm",
+    "unit": null,
+    "sort_order": 7
+  },
+  {
+    "id": 134,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Menghitung keliling",
+    "difficulty": 2,
+    "prompt": "Diameter lingkaran 20 cm. Kelilingnya adalah ... (π = 3,14)",
+    "options": [
+      "31,4 cm",
+      "62,8 cm",
+      "125,6 cm",
+      "314 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "K = π × d = 3,14 × 20 = 62,8 cm.",
+    "illustration": "circle-d:20 cm",
+    "unit": null,
+    "sort_order": 8
+  },
+  {
+    "id": 135,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Jarak tempuh roda",
+    "difficulty": 3,
+    "prompt": "Roda berjari-jari 35 cm berputar satu kali. Jarak yang ditempuh adalah ... (π = 22/7)",
+    "options": [
+      "110 cm",
+      "220 cm",
+      "3.850 cm",
+      "70 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "Jarak satu putaran = 2 × 22/7 × 35 = 2 × 22 × 5 = 220 cm.",
+    "illustration": "wheel:r = 35 cm",
+    "unit": null,
+    "sort_order": 9
+  },
+  {
+    "id": 136,
+    "quiz": "posttest",
+    "qtype": "mcq",
+    "topic": "Soal cerita",
+    "difficulty": 3,
+    "prompt": "Meja bundar berdiameter 140 cm akan dihias pita di tepinya. Panjang pita yang dibutuhkan adalah ... (π = 22/7)",
+    "options": [
+      "220 cm",
+      "440 cm",
+      "880 cm",
+      "154 cm"
+    ],
+    "answer": {
+      "index": 1
+    },
+    "explanation": "Panjang pita = keliling = 22/7 × 140 = 22 × 20 = 440 cm.",
+    "illustration": "table:d = 140 cm",
+    "unit": null,
     "sort_order": 10
   }
 ];

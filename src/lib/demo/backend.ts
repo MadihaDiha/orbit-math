@@ -57,8 +57,13 @@ function quizBySlug(slug: string) {
   return q;
 }
 
+function hasKind(s: DemoState, kind: string): boolean {
+  return s.quizAttempts.some((a) => a.kind === kind);
+}
+
+/** Sama dengan private.is_lesson_unlocked: Misi 1 butuh Pre-test, misi n butuh misi n-1 selesai. */
 function isUnlocked(s: DemoState, lessonId: number): boolean {
-  return lessonId <= 1 || s.lessons[lessonId - 1]?.status === "completed";
+  return lessonId <= 1 ? hasKind(s, "pretest") : s.lessons[lessonId - 1]?.status === "completed";
 }
 
 function requireUser(s: DemoState) {
@@ -91,6 +96,8 @@ function checkAchievements(s: DemoState): EarnedAchievement[] {
   const done = (id: number) => s.lessons[id]?.status === "completed";
   const passedQuiz = (slug: string) => s.quizAttempts.some((a) => a.quiz === slug && a.passed);
   const rules: Record<string, () => boolean> = {
+    "pre-flight": () => hasKind(s, "pretest"),
+    "young-astronaut": () => hasKind(s, "posttest"),
     "first-discovery": () => Object.values(s.lessons).some((l) => l.status === "completed"),
     "radius-specialist": () => done(2),
     "pi-detective": () => done(3),
@@ -157,6 +164,8 @@ export const demoRpc = {
         if (quiz.kind === "daily") throw new Error("quiz_not_found");
         if (quiz.kind === "lesson" && quiz.lesson_id && !isUnlocked(s, quiz.lesson_id)) throw new Error("lesson_locked");
         if (quiz.kind === "exam" && !isUnlocked(s, 7)) throw new Error("exam_locked");
+        if (quiz.kind === "pretest" && hasKind(s, "pretest")) throw new Error("pretest_done");
+        if (quiz.kind === "posttest" && s.lessons[7]?.status !== "completed") throw new Error("posttest_locked");
         const n = Math.min(Math.max(count ?? quiz.default_count, 1), 50);
         const pool = BANK_QUESTIONS.filter((q) => q.quiz === slug);
         const chosen = quiz.shuffle ? shuffle(pool).slice(0, n) : pool.sort((a, b) => a.sort_order - b.sort_order).slice(0, n);
@@ -170,7 +179,7 @@ export const demoRpc = {
         return {
           session_id: id,
           time_limit_seconds: limit,
-          quiz: { slug: quiz.slug, title: quiz.title, kind: quiz.kind as "lesson" | "training" | "exam", pass_score: quiz.pass_score, level: quiz.level },
+          quiz: { slug: quiz.slug, title: quiz.title, kind: quiz.kind as StartedQuiz["quiz"]["kind"], pass_score: quiz.pass_score, level: quiz.level },
           questions: chosen.map(publicQuestion),
         };
       }),
@@ -183,7 +192,7 @@ export const demoRpc = {
     const sess = s.sessions[sessionId];
     if (!sess) throw new Error("session_not_found");
     if (sess.submitted) throw new Error("session_already_submitted");
-    if (quizBySlug(sess.quiz).kind !== "training") throw new Error("feedback_not_allowed");
+    if (!["training", "pretest", "posttest"].includes(quizBySlug(sess.quiz).kind)) throw new Error("feedback_not_allowed");
     if (!sess.ids.includes(questionId)) throw new Error("question_not_in_session");
     const q = BANK_QUESTIONS.find((x) => x.id === questionId)!;
     return delay({ is_correct: gradeAnswer(q.answer, given), correct_answer: q.answer, explanation: q.explanation });
@@ -198,6 +207,7 @@ export const demoRpc = {
         if (sess.submitted) throw new Error("session_already_submitted");
         if (Date.now() - sess.started > DAY) throw new Error("session_expired");
         const quiz = quizBySlug(sess.quiz);
+        if (quiz.kind === "pretest" && hasKind(s, "pretest")) throw new Error("pretest_done");
         let correct = 0;
         let xp = 0;
         const review = sess.ids.map((id) => {
@@ -229,14 +239,19 @@ export const demoRpc = {
           const lp = s.lessons[quiz.lesson_id] ?? { lesson_id: quiz.lesson_id, status: "in_progress" as const, best_quiz_score: 0, stars: 0, completed_at: null };
           lp.best_quiz_score = Math.max(lp.best_quiz_score, score);
           s.lessons[quiz.lesson_id] = lp;
+        } else if (quiz.kind === "pretest") {
+          xp += awardXp(s, "pretest-done", 20, "exam");
+        } else if (quiz.kind === "posttest") {
+          xp += awardXp(s, "posttest-done", 50, "exam");
+          if (passed) xp += awardXp(s, "posttest-pass", quiz.xp_reward, "exam");
         } else if (passed && quiz.kind === "training") {
           xp += awardXp(s, `quiz-pass:${quiz.slug}`, quiz.xp_reward, "training");
         } else if (passed && quiz.kind === "exam") {
           xp += awardXp(s, "exam-pass", quiz.xp_reward, "exam");
           if (score === 100) xp += awardXp(s, "exam-perfect", 100, "exam");
         }
-        const type: ActivityType = quiz.kind === "lesson" ? "lesson" : quiz.kind === "exam" ? "exam" : "training";
-        log(s, type, quiz.title, passed ? "lulus" : "belum lulus", score, xp);
+        const type: ActivityType = quiz.kind === "lesson" ? "lesson" : quiz.kind === "training" ? "training" : "exam";
+        log(s, type, quiz.title, quiz.kind === "pretest" ? "selesai" : passed ? "lulus" : "belum lulus", score, xp);
         touch(s);
         const newAch = checkAchievements(s);
         return { score, correct, total, passed, pass_score: quiz.pass_score, xp_earned: xp, review, new_achievements: newAch };

@@ -1,68 +1,69 @@
 import Link from "next/link";
-import { Lock, Star } from "lucide-react";
-import { missionStates } from "@/lib/progress";
-import type { LessonProgressRow } from "@/lib/types";
-import { MISSIONS } from "@/content/missions";
-import { GalaxyMap } from "@/components/cosmic/GalaxyMap";
+import { Star, Trophy } from "lucide-react";
+import { journeyPercent, missionStates } from "@/lib/progress";
+import type { JourneyData } from "@/lib/view-types";
+import { JourneyMap } from "@/components/cosmic/JourneyMap";
+import { PlanetSystem } from "@/components/cosmic/PlanetSystem";
+import { PlanetArt } from "@/components/cosmic/PlanetArt";
+import { PortalArt } from "@/components/cosmic/PlanetDialog";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { BimoSays } from "@/components/bimo/BimoSays";
 
-export function GalaxyView({ progress }: { progress: LessonProgressRow[] }) {
-  const states = missionStates(progress);
-  const byId = new Map(progress.map((p) => [p.lesson_id, p]));
-  const stars = Object.fromEntries(progress.map((p) => [p.lesson_id, p.stars]));
+export function GalaxyView({ data }: { data: JourneyData }) {
+  const { progress, journey } = data;
+  const states = missionStates(progress, journey);
   const totalStars = progress.reduce((s, p) => s + p.stars, 0);
+  const percent = journeyPercent(progress, journey);
 
   return (
-    <div>
-      <PageHeader eyebrow="Galaxy Map" title="Peta Galaksi Lingkaran" description="Setiap planet adalah satu misi. Selesaikan misi untuk membuka wilayah berikutnya. Planet yang sudah terbuka bisa diulang kapan saja.">
-        <span className="chip border-gold/40 bg-gold/10 text-gold"><Star size={14} className="fill-gold" /> {totalStars}/21 bintang</span>
+    <div className="space-y-10">
+      <PageHeader eyebrow="Galaxy Journey" title="Peta Perjalanan Galaksi" description="Dari landasan peluncuran, lewati enam planet dan Stasiun Final, lalu pulang lewat Portal Post-test. Ketuk planet untuk melihat misinya.">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="chip border-gold/40 bg-gold/10 text-gold"><Star size={14} className="fill-gold" /> {totalStars}/21 bintang</span>
+          <span className="chip">{percent}% perjalanan</span>
+        </div>
       </PageHeader>
 
-      <section className="panel-hud grid-hud mb-8 p-4 sm:p-8">
-        <GalaxyMap states={states} stars={stars} />
+      <section className="panel-hud relative overflow-hidden p-4 sm:p-8">
+        <ProgressBar value={percent} color="from-nebula via-neon to-gold" className="mb-6" label="Progres perjalanan galaksi" />
+        <JourneyMap progress={progress} journey={journey} />
       </section>
 
-      <div className="mb-6 max-w-2xl">
-        <BimoSays mood="happy" size={80}>Bintang diberikan dari nilai mini quiz: 1 bintang (lulus), 2 bintang (≥80), 3 bintang (100). Ulangi misi untuk menambah bintang!</BimoSays>
-      </div>
+      {!journey.pretest && (
+        <div className="max-w-2xl">
+          <BimoSays mood="wave" size={84}>
+            Sebelum kita berangkat, yuk uji pengetahuanmu dulu! Ketuk <b className="text-gold">Landasan Peluncuran</b> untuk mengerjakan Pre-test.
+          </BimoSays>
+        </div>
+      )}
 
-      <ol className="grid gap-4 md:grid-cols-2">
-        {MISSIONS.map((m) => {
-          const s = states[m.id];
-          const p = byId.get(m.id);
-          const locked = s === "locked";
-          return (
-            <li key={m.id} className={`panel flex gap-4 p-5 ${locked ? "opacity-60" : ""}`}>
-              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full font-hud font-black" style={{ background: locked ? "#1a2a4a" : `radial-gradient(circle at 30% 30%, #fff, ${m.colors[0]} 30%, ${m.colors[1]})` }}>
-                {locked ? <Lock size={18} /> : String(m.id).padStart(2, "0")}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-hud text-[11px] font-bold text-ice">{m.code} — {m.planet.toUpperCase()}</p>
-                <p className="font-bold">{m.title}</p>
-                <p className="text-sm text-soft/65">{m.tagline}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {locked ? (
-                    <span className="text-xs font-bold text-soft/50">Selesaikan Misi {m.id - 1} untuk membuka</span>
-                  ) : (
-                    <Link href={`/missions/${m.slug}`} className={s === "completed" ? "btn-ghost px-4 py-2 text-sm" : "btn-primary px-4 py-2 text-sm"}>
-                      {s === "completed" ? "Ulangi materi" : s === "in_progress" ? "Lanjutkan" : "Mulai misi"}
-                    </Link>
-                  )}
-                  {p && p.best_quiz_score > 0 && <span className="text-xs text-soft/60">Nilai terbaik {p.best_quiz_score}</span>}
-                  {s === "completed" && (
-                    <span className="flex gap-0.5">
-                      {[1, 2, 3].map((n) => (
-                        <Star key={n} size={14} className={n <= (p?.stars ?? 0) ? "fill-gold text-gold" : "text-soft/25"} />
-                      ))}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      <section>
+        <p className="eyebrow">Enam wilayah galaksi</p>
+        <h2 className="mb-6 font-hud text-2xl font-black sm:text-3xl">Tata Surya Lingkaran</h2>
+        <PlanetSystem progress={progress} journey={journey} />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <Link href="/missions/final-cosmic-mission" className={`panel card-float flex items-center gap-4 p-5 ${states[7] === "locked" ? "pointer-events-none opacity-60" : ""}`}>
+          <span className="w-24 shrink-0"><PlanetArt variant="station" size="100%" dim={states[7] === "locked"} /></span>
+          <span>
+            <span className="eyebrow">Mission 07</span>
+            <span className="block font-hud text-lg font-black">Stasiun Final</span>
+            <span className="text-sm text-soft/70">{states[7] === "completed" ? "Selesai ✓ — pengulangan materi" : states[7] === "locked" ? "Terbuka setelah 6 planet ditaklukkan" : "Ulangi semua materi sebelum Post-test"}</span>
+          </span>
+        </Link>
+        <Link href={journey.posttest ? "/results" : "/posttest"} className={`panel card-float flex items-center gap-4 p-5 ${states[7] !== "completed" ? "pointer-events-none opacity-60" : ""}`}>
+          <span className="w-24 shrink-0"><PortalArt size="100%" dim={states[7] !== "completed"} /></span>
+          <span>
+            <span className="eyebrow">Post-test</span>
+            <span className="block font-hud text-lg font-black">Portal Pulang</span>
+            <span className="text-sm text-soft/70">
+              {journey.posttest ? <><Trophy className="mr-1 inline" size={14} />Nilai {journey.posttest.score} — lihat hasil akhir</> : states[7] === "completed" ? "Siap! Kerjakan Post-test" : "Terbuka setelah Stasiun Final"}
+            </span>
+          </span>
+        </Link>
+      </section>
     </div>
   );
 }

@@ -1,25 +1,36 @@
 import Link from "next/link";
 import { Award, Flame, FlaskConical, Map, Play, Rocket, Star, Target } from "lucide-react";
-import { missionStates } from "@/lib/progress";
+import { journeyPercent, missionStates, nextStep } from "@/lib/progress";
 import { MISSIONS } from "@/content/missions";
 import { levelProgress } from "@/lib/levels";
 import { ACTIVITY_LABELS, formatDateTime, greeting } from "@/lib/format";
 import type { DashboardData } from "@/lib/view-types";
 import { Bimo } from "@/components/bimo/Bimo";
-import { GalaxyMap } from "@/components/cosmic/GalaxyMap";
+import { JourneyMap } from "@/components/cosmic/JourneyMap";
+import { PlanetArt } from "@/components/cosmic/PlanetArt";
+import { LaunchPadArt, PortalArt } from "@/components/cosmic/PlanetDialog";
+import { PLANETS } from "@/content/planets";
 import { ProgressBar, ProgressRing } from "@/components/ui/ProgressBar";
 import { AchievementIcon } from "@/components/reward/AchievementIcon";
 import { DailyChallenge } from "@/components/dashboard/DailyChallenge";
 
 export function DashboardView({ data }: { data: DashboardData }) {
-  const { profile, stats, progress, activities, badges, gamesPlayed } = data;
-  const states = missionStates(progress);
+  const { profile, stats, progress, activities, badges, gamesPlayed, journey } = data;
+  const states = missionStates(progress, journey);
   const completed = progress.filter((p) => p.status === "completed").length;
   const unlocked = Object.values(states).filter((s) => s !== "locked").length;
-  const percent = Math.round((completed / MISSIONS.length) * 100);
+  const percent = journeyPercent(progress, journey);
   const lp = levelProgress(stats.total_xp);
-  const starsMap = Object.fromEntries(progress.map((p) => [p.lesson_id, p.stars]));
-  const nextMission = MISSIONS.find((m) => states[m.id] === "in_progress" || states[m.id] === "available");
+  const step = nextStep(progress, journey);
+  const nextMission = step.missionId ? MISSIONS[step.missionId - 1] : undefined;
+  const next = {
+    pretest: { href: "/pretest", eyebrow: "Langkah berikutnya", title: "Landasan Peluncuran: Pre-test", text: "Sebelum kita berangkat, yuk uji pengetahuanmu dulu! Planet pertama terbuka setelah pre-test.", cta: "Mulai Pre-test" },
+    mission: nextMission
+      ? { href: `/missions/${nextMission.slug}`, eyebrow: "Misi berikutnya", title: PLANETS[nextMission.id - 1].name, text: `${nextMission.title} — ${nextMission.tagline}`, cta: states[nextMission.id] === "in_progress" ? "Lanjutkan misi" : "Masuki planet" }
+      : null,
+    posttest: { href: "/posttest", eyebrow: "Misi terakhir", title: "Portal Pulang: Post-test", text: "Semua planet sudah ditaklukkan! Kerjakan post-test dan lihat perkembanganmu.", cta: "Mulai Post-test" },
+    results: { href: "/results", eyebrow: "Petualangan selesai", title: "Hasil Akhir Astronot Muda", text: "Lihat perbandingan pre-test dan post-test, bintang, dan lencanamu.", cta: "Lihat Hasil Akhir" },
+  }[step.step];
   const firstName = profile.full_name.split(" ")[0];
 
   return (
@@ -35,11 +46,15 @@ export function DashboardView({ data }: { data: DashboardData }) {
             <p className="mt-1 text-soft/70">@{profile.username} · Kelas {profile.class_name}</p>
             <p className="mt-3 max-w-xl rounded-2xl bg-white/5 px-4 py-2.5 text-sm font-semibold">
               <span className="text-ice">BIMO: </span>
-              {completed === 0
-                ? "Halo, penjelajah! BIMO siap menemanimu menjelajahi dunia lingkaran hari ini!"
-                : completed === 7
-                  ? "Semua wilayah sudah kamu jelajahi! Ayo raih nilai sempurna di Final Exam atau tantang dirimu di Playground."
-                  : `Kamu sudah menaklukkan ${completed} wilayah. Wilayah berikutnya menunggu!`}
+              {step.step === "pretest"
+                ? "Halo, Astronot Muda! Sebelum berangkat, kerjakan Pre-test dulu, ya!"
+                : step.step === "results"
+                  ? "Petualanganmu selesai! Lihat hasil akhirmu atau tantang dirimu di Playground."
+                  : step.step === "posttest"
+                    ? "Semua planet sudah kamu taklukkan! Tinggal satu misi lagi: Post-test."
+                    : completed === 0
+                      ? "Pre-test beres! Yuk berangkat ke Planet Pengenalan Lingkaran!"
+                      : `Yeay! ${completed} wilayah sudah kamu taklukkan. Planet berikutnya menunggu!`}
             </p>
           </div>
           <div className="flex items-center gap-4 md:flex-col">
@@ -61,7 +76,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-5" aria-label="Statistik">
         {[
           { label: "Total XP", value: stats.total_xp, icon: Rocket, color: "text-gold" },
-          { label: "Progres belajar", value: `${percent}%`, icon: Target, color: "text-ice" },
+          { label: "Perjalanan galaksi", value: `${percent}%`, icon: Target, color: "text-ice" },
           { label: "Misi selesai", value: `${completed}/7`, icon: Award, color: "text-neon" },
           { label: "Planet terbuka", value: `${unlocked}/7`, icon: Map, color: "text-nebula" },
           { label: "Streak harian", value: `${stats.streak_days} hari`, icon: Flame, color: "text-rose-300" },
@@ -74,46 +89,49 @@ export function DashboardView({ data }: { data: DashboardData }) {
         ))}
       </section>
 
+      {/* Galaxy Journey */}
+      <section className="panel-hud p-4 sm:p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-hud text-lg font-black">Galaxy Journey</h2>
+            <ProgressBar value={percent} color="from-nebula via-neon to-gold" className="mt-2 w-56" label="Progres perjalanan galaksi" />
+          </div>
+          <Link href="/galaxy" className="btn-ghost px-4 py-2 text-sm"><Map size={16} /> Peta lengkap</Link>
+        </div>
+        <JourneyMap progress={progress} journey={journey} compact />
+      </section>
+
       <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <div className="space-y-6">
-          {/* Peta galaksi */}
-          <section className="panel p-5 sm:p-6">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-hud text-lg font-black">Perjalanan Galaksimu</h2>
-                <ProgressBar value={completed} max={7} className="mt-2 w-48" label="Progres misi" />
+          {/* Langkah berikutnya */}
+          {next && (
+            <section className="panel card-float relative flex flex-wrap items-center gap-5 overflow-hidden p-5 sm:p-6">
+              <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-gold/20 blur-3xl" />
+              <span className="w-24 shrink-0">
+                {step.step === "pretest" ? (
+                  <LaunchPadArt size="100%" />
+                ) : step.step === "mission" && nextMission ? (
+                  <PlanetArt variant={PLANETS[nextMission.id - 1].variant} size="100%" />
+                ) : (
+                  <PortalArt size="100%" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="eyebrow">{next.eyebrow}</p>
+                <p className="font-hud text-xl font-black">{next.title}</p>
+                <p className="text-sm text-soft/70">{next.text}</p>
               </div>
-              <Link href="/galaxy" className="btn-ghost px-4 py-2 text-sm"><Map size={16} /> Jelajahi Galaksi</Link>
-            </div>
-            <GalaxyMap states={states} stars={starsMap} compact />
-          </section>
+              <Link href={next.href} className="btn-gold btn-glow btn-press px-6 py-3"><Play size={18} /> {next.cta}</Link>
+            </section>
+          )}
 
           {/* Tombol aksi */}
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {nextMission ? (
-              <Link href={`/missions/${nextMission.slug}`} className="btn-primary py-3.5"><Play size={18} /> Lanjutkan Belajar</Link>
-            ) : (
-              <Link href="/exam" className="btn-primary py-3.5"><Play size={18} /> Final Exam</Link>
-            )}
-            <Link href="/lab" className="btn-ghost py-3.5"><FlaskConical size={18} /> Buka Circle Laboratory</Link>
+            <Link href="/galaxy" className="btn-primary py-3.5"><Map size={18} /> Jelajahi Galaksi</Link>
+            <Link href="/lab" className="btn-ghost py-3.5"><FlaskConical size={18} /> Circle Laboratory</Link>
             <Link href="/training" className="btn-ghost py-3.5"><Target size={18} /> Mulai Tantangan</Link>
             <Link href="/achievements" className="btn-ghost py-3.5"><Award size={18} /> Lihat Pencapaian</Link>
           </section>
-
-          {/* Rekomendasi */}
-          {nextMission && (
-            <section className="panel-hud flex flex-wrap items-center gap-5 p-5">
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full font-hud text-xl font-black" style={{ background: `radial-gradient(circle at 30% 30%, #fff, ${nextMission.colors[0]} 30%, ${nextMission.colors[1]})` }}>
-                {String(nextMission.id).padStart(2, "0")}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="eyebrow">Rekomendasi misi berikutnya</p>
-                <p className="font-hud text-lg font-black">{nextMission.planet}: {nextMission.title}</p>
-                <p className="text-sm text-soft/70">{nextMission.tagline}</p>
-              </div>
-              <Link href={`/missions/${nextMission.slug}`} className="btn-cyan">Mulai misi</Link>
-            </section>
-          )}
         </div>
 
         <div className="space-y-6">

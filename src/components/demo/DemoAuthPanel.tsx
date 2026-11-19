@@ -11,7 +11,7 @@ import { Bimo } from "@/components/bimo/Bimo";
 import { Spinner } from "@/components/ui/Spinner";
 
 /** Masuk/daftar Mode Demo — aktif hanya bila Supabase belum dikonfigurasi. */
-export function DemoAuthPanel({ mode, next = "/dashboard" }: { mode: "login" | "register"; next?: string }) {
+export function DemoAuthPanel({ mode, next = "/pretest" }: { mode: "login" | "register"; next?: string }) {
   const s = useDemoState();
   const router = useRouter();
   const [fullName, setFullName] = useState("");

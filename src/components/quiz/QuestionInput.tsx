@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import { formatNumber, parseNumberInput } from "@/lib/math";
+import { playSfx } from "@/lib/sound";
 import type { CorrectAnswer, GivenAnswer, MatchOptions, PublicQuestion } from "@/lib/types";
 import { Illustration } from "@/components/circle/Illustration";
 
@@ -82,7 +83,10 @@ export function QuestionInput({ question, value, onChange, disabled = false, cor
                 role="radio"
                 aria-checked={Boolean(selected)}
                 disabled={disabled}
-                onClick={() => onChange({ index: i })}
+                onClick={() => {
+                  playSfx("select");
+                  onChange({ index: i });
+                }}
                 className={`choice ${state} ${q.type === "fill_formula" ? "font-hud" : ""}`}
               >
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 font-hud text-sm font-black">

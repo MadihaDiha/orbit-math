@@ -1,4 +1,4 @@
-import { Award, Calculator, Gamepad2, Orbit, Rocket, Ruler, Search, Sigma, Star, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { Award, Calculator, ClipboardCheck, Gamepad2, Medal, Orbit, Rocket, Ruler, Search, Sigma, Star, Trophy, Zap, type LucideIcon } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
   rocket: Rocket,
@@ -11,6 +11,8 @@ const ICONS: Record<string, LucideIcon> = {
   gamepad: Gamepad2,
   trophy: Trophy,
   star: Star,
+  clipboard: ClipboardCheck,
+  medal: Medal,
 };
 
 export function AchievementIcon({ icon, size = 28, earned = true }: { icon: string; size?: number; earned?: boolean }) {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FileSearch, Lock, Search } from "lucide-react";
 import { PI_CASES, scorePiCase, shuffle } from "@/lib/games";
 import type { GameFinish } from "./GameShell";
+import { playSfx } from "@/lib/sound";
 
 export function PiDetective({ onFinish }: { onFinish: (r: GameFinish) => void }) {
   const [cases] = useState(() => shuffle(PI_CASES));
@@ -19,6 +20,7 @@ export function PiDetective({ onFinish }: { onFinish: (r: GameFinish) => void })
   const choose = (idx: number) => {
     if (answer !== null) return;
     setAnswer(idx);
+    playSfx(idx === c.answer ? "correct" : "wrong");
     if (idx === c.answer) {
       setScore((s) => s + scorePiCase(opened, true));
       setSolved((n) => n + 1);
@@ -62,7 +64,10 @@ export function PiDetective({ onFinish }: { onFinish: (r: GameFinish) => void })
                   key={idx}
                   type="button"
                   disabled={isOpen || answer !== null}
-                  onClick={() => setOpened(idx + 1)}
+                  onClick={() => {
+                    playSfx("star");
+                    setOpened(idx + 1);
+                  }}
                   className={`min-h-[110px] rounded-2xl border p-4 text-left text-sm transition ${
                     isOpen ? "animate-pop-in border-nebula/50 bg-nebula/10" : "border-dashed border-soft/20 bg-white/5 hover:border-nebula/60"
                   }`}

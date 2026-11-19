@@ -3,7 +3,10 @@ import Link from "next/link";
 import { ArrowLeft, BookOpen, CheckCircle2, Lightbulb, ListChecks, Lock, Sparkles, Target } from "lucide-react";
 import { MISSIONS, type MissionContent } from "@/content/missions";
 import { missionStates } from "@/lib/progress";
-import type { LessonProgressRow } from "@/lib/types";
+import type { JourneyData } from "@/lib/view-types";
+import { BIMO_LINES } from "@/lib/bimo-lines";
+import { PLANETS } from "@/content/planets";
+import { PlanetArt } from "@/components/cosmic/PlanetArt";
 import { Illustration } from "@/components/circle/Illustration";
 import { ObjectIcon } from "@/components/cosmic/ObjectIcon";
 import { BimoSays } from "@/components/bimo/BimoSays";
@@ -18,24 +21,38 @@ function SectionTitle({ icon: Icon, children }: { icon: typeof BookOpen; childre
   );
 }
 
-export function MissionView({ mission, progress }: { mission: MissionContent; progress: LessonProgressRow[] }) {
-  const states = missionStates(progress);
+export function MissionView({ mission, data }: { mission: MissionContent; data: JourneyData }) {
+  const { progress, journey } = data;
+  const states = missionStates(progress, journey);
+  const planet = PLANETS[mission.id - 1];
   const state = states[mission.id];
   const p = progress.find((x) => x.lesson_id === mission.id);
   const next = MISSIONS[mission.id] ?? null;
 
   if (state === "locked") {
+    const prev = mission.id > 1 ? MISSIONS[mission.id - 2] : null;
     return (
       <div className="panel mx-auto max-w-xl p-8 text-center">
-        <Lock className="mx-auto text-soft/50" size={40} />
-        <h1 className="mt-3 font-hud text-2xl font-black">{mission.planet} masih terkunci</h1>
-        <p className="mt-2 text-soft/70">Selesaikan Misi {mission.id - 1} ({MISSIONS[mission.id - 2].title}) terlebih dahulu untuk membuka wilayah ini.</p>
-        <Link href={`/missions/${MISSIONS[mission.id - 2].slug}`} className="btn-primary mt-6">Ke Misi {mission.id - 1}</Link>
+        <div className="mx-auto w-40">
+          <PlanetArt variant={planet.variant} size="100%" dim />
+        </div>
+        <h1 className="mt-3 font-hud text-2xl font-black"><Lock className="mr-1 inline" size={22} /> {planet.name} masih terkunci</h1>
+        {prev ? (
+          <>
+            <p className="mt-2 text-soft/70">Taklukkan {PLANETS[mission.id - 2].name} ({prev.title}) terlebih dahulu untuk membuka planet ini.</p>
+            <Link href={`/missions/${prev.slug}`} className="btn-primary mt-6">Ke {PLANETS[mission.id - 2].name}</Link>
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-soft/70">Kerjakan Pre-test dulu, ya! Bimo ingin tahu pengetahuan awalmu sebelum kita berangkat.</p>
+            <Link href="/pretest" className="btn-gold mt-6">Mulai Pre-test</Link>
+          </>
+        )}
       </div>
     );
   }
 
-  const [c1, c2] = mission.colors;
+  const [c1] = mission.colors;
 
   return (
     <article className="space-y-10">
@@ -46,18 +63,22 @@ export function MissionView({ mission, progress }: { mission: MissionContent; pr
         <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-60 blur-2xl" style={{ background: `radial-gradient(circle, ${c1}, transparent 70%)` }} />
         <Link href="/galaxy" className="mb-5 inline-flex items-center gap-1 text-sm font-bold text-soft/60 hover:text-ice"><ArrowLeft size={16} /> Galaxy Map</Link>
         <div className="grid items-center gap-6 md:grid-cols-[auto_1fr]">
-          <span className="grid h-28 w-28 place-items-center rounded-full font-hud text-3xl font-black text-white" style={{ background: `radial-gradient(circle at 30% 28%, #fff 0%, ${c1} 25%, ${c2} 72%, #07152F 100%)`, boxShadow: `0 0 60px -10px ${c1}` }}>
-            {String(mission.id).padStart(2, "0")}
+          <span className="mx-auto block w-40 sm:w-48">
+            <PlanetArt variant={planet.variant} size="100%" title={planet.name} />
           </span>
           <div>
             <p className="eyebrow" style={{ color: c1 }}>{mission.code} · {mission.planet}</p>
+            <p className="mt-1 font-hud text-sm font-bold" style={{ color: planet.color }}>{planet.name}</p>
             <h1 className="mt-1 font-hud text-3xl font-black sm:text-4xl">{mission.title}</h1>
             <p className="mt-2 text-soft/75">{mission.tagline}</p>
-            {state === "completed" && <span className="chip mt-3 border-gold/40 bg-gold/10 text-gold"><CheckCircle2 size={14} /> Misi selesai — kamu bisa mengulang kapan saja</span>}
+            {state === "completed" && <span className="chip mt-3 border-gold/40 bg-gold/10 text-gold"><CheckCircle2 size={14} /> Planet ditaklukkan — kamu bisa mengulang kapan saja</span>}
           </div>
         </div>
         <div className="mt-6">
-          <BimoSays mood="wave" size={84}>{mission.bimoIntro}</BimoSays>
+          <BimoSays mood="wave" size={84}>
+            <span className="block text-gold">{BIMO_LINES.openLesson}</span>
+            {mission.bimoIntro}
+          </BimoSays>
         </div>
       </header>
 

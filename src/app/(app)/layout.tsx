@@ -4,6 +4,7 @@ import { getSession } from "@/lib/data";
 import { AppNav } from "@/components/nav/AppNav";
 import { RewardProvider } from "@/components/reward/RewardProvider";
 import { DemoShell } from "@/components/demo/DemoShell";
+import { BimoGuide } from "@/components/bimo/BimoGuide";
 
 // Dengan Supabase, halaman privat otomatis dinamis karena membaca cookie sesi (getSession).
 
@@ -12,6 +13,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     return (
       <RewardProvider>
         <DemoShell>{children}</DemoShell>
+        <BimoGuide />
       </RewardProvider>
     );
   }
@@ -21,6 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <RewardProvider>
       <AppNav name={profile.full_name} username={profile.username} xp={stats.total_xp} avatar={profile.avatar_color} />
       <div className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:pb-16 sm:pt-8">{children}</div>
+      <BimoGuide />
     </RewardProvider>
   );
 }

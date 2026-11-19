@@ -22,7 +22,7 @@ export type CorrectAnswer = { index: number } | { value: number; tolerance?: num
 export interface StartedQuiz {
   session_id: string;
   time_limit_seconds: number | null;
-  quiz: { slug: string; title: string; kind: "lesson" | "training" | "exam"; pass_score: number; level: number | null };
+  quiz: { slug: string; title: string; kind: "lesson" | "training" | "exam" | "pretest" | "posttest"; pass_score: number; level: number | null };
   questions: PublicQuestion[];
 }
 

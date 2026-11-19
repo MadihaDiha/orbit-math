@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import type { AchievementRow, ActivityLog, LessonProgressRow, Profile, UserStats } from "@/lib/types";
-import type { AchievementsData, DashboardData, ExamAttemptRow, ExamData, PlaygroundData, ProfileData, TrainingData } from "@/lib/view-types";
-import { missionStates } from "@/lib/progress";
+import type { AchievementsData, DashboardData, ExamAttemptRow, ExamData, JourneyData, PlaygroundData, ProfileData, ResultsData, TrainingData } from "@/lib/view-types";
+import { buildJourney, missionStates, type JourneyFlags, type TestResult } from "@/lib/progress";
 
 export { missionStates, type MissionState } from "@/lib/progress";
 
@@ -47,6 +47,23 @@ export const getLessonProgress = cache(async () => {
   return (data ?? []) as LessonProgressRow[];
 });
 
+/** Status pre-test & post-test siswa. */
+export const getJourney = cache(async (): Promise<JourneyFlags> => {
+  const { supabase, user } = await getSession();
+  const { data } = await supabase
+    .from("quiz_attempts")
+    .select("score, correct_count, total, created_at, quizzes!inner(kind)")
+    .eq("user_id", user.id)
+    .in("quizzes.kind", ["pretest", "posttest"]);
+  const rows = ((data ?? []) as unknown as (TestResult & { quizzes: { kind: string } })[]).map((r) => ({ ...r, kind: r.quizzes.kind }));
+  return buildJourney(rows);
+});
+
+export async function getJourneyData(): Promise<JourneyData> {
+  const [progress, journey] = await Promise.all([getLessonProgress(), getJourney()]);
+  return { progress, journey };
+}
+
 function extractBadges(rows: unknown[] | null): AchievementRow[] {
   return (rows ?? []).map((e) => (e as { achievements: AchievementRow | null }).achievements).filter((a): a is AchievementRow => Boolean(a));
 }
@@ -59,7 +76,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabase.from("user_achievements").select("earned_at, achievements(slug, title, description, icon, xp_reward, sort_order)").eq("user_id", user.id).order("earned_at", { ascending: false }),
     supabase.from("game_attempts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
   ]);
-  return { profile, stats, progress, activities: (activities ?? []) as ActivityLog[], badges: extractBadges(earned), gamesPlayed: gamesPlayed ?? 0 };
+  const journey = await getJourney();
+  return { profile, stats, progress, activities: (activities ?? []) as ActivityLog[], badges: extractBadges(earned), gamesPlayed: gamesPlayed ?? 0, journey };
 }
 
 export async function getTrainingData(slugs: string[]): Promise<TrainingData> {
@@ -86,7 +104,7 @@ export async function getPlaygroundData(): Promise<PlaygroundData> {
 
 export async function getExamData(): Promise<ExamData> {
   const { supabase, user } = await getSession();
-  const states = missionStates(await getLessonProgress());
+  const states = missionStates(await getLessonProgress(), await getJourney());
   const { data } = await supabase
     .from("quiz_attempts")
     .select("id, score, correct_count, total, passed, duration_seconds, created_at, quizzes!inner(kind)")
@@ -139,5 +157,15 @@ export async function getAchievementsData(): Promise<AchievementsData> {
   ]);
   const earnedAt: Record<string, string> = {};
   for (const m of (mine ?? []) as { achievement_id: string; earned_at: string }[]) earnedAt[m.achievement_id] = m.earned_at;
-  return { all: (all ?? []) as AchievementRow[], earnedAt, stats, progress };
+  return { all: (all ?? []) as AchievementRow[], earnedAt, stats, progress, journey: await getJourney() };
+}
+
+export async function getResultsData(): Promise<ResultsData> {
+  const { supabase, user, profile, stats } = await getSession();
+  const [progress, journey, { data: earned }] = await Promise.all([
+    getLessonProgress(),
+    getJourney(),
+    supabase.from("user_achievements").select("achievements(slug, title, description, icon, xp_reward, sort_order)").eq("user_id", user.id),
+  ]);
+  return { profile, stats, progress, journey, badges: extractBadges(earned) };
 }

@@ -11,7 +11,7 @@ export interface BankLesson {
 export interface BankQuiz {
   slug: string;
   title: string;
-  kind: "lesson" | "training" | "exam" | "daily";
+  kind: "lesson" | "training" | "exam" | "daily" | "pretest" | "posttest";
   lesson_id: number | null;
   level: number | null;
   pass_score: number;

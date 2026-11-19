@@ -63,7 +63,7 @@ export function RegisterForm() {
         password: form.password,
         options: {
           data: { full_name: form.fullName.trim(), username: form.username.trim(), class_name: form.className.trim() },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/pretest`,
         },
       });
       if (error) throw error;
@@ -72,7 +72,7 @@ export function RegisterForm() {
         throw new Error("User already registered");
       }
       if (data.session) {
-        router.replace("/dashboard");
+        router.replace("/pretest");
         router.refresh();
         return;
       }

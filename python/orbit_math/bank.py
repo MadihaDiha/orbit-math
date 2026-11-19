@@ -233,7 +233,24 @@ def to_typescript(bank: Bank) -> str:
     )
 
 
+SETUP_ALL = ROOT / "supabase" / "setup_all.sql"
+
+
+def build_setup_all() -> str:
+    """Gabungan semua migrasi (urut nama) + seed — untuk ditempel sekali di Supabase SQL Editor."""
+    parts = ["-- ORBIT MATH — SETUP LENGKAP (semua migrasi + seed). Tempel seluruh isi file ini di Supabase SQL Editor lalu klik Run.\n"
+             "-- File ini dihasilkan otomatis oleh `npm run gen:bank`; jangan diedit manual.\n"]
+    files = sorted((ROOT / "supabase" / "migrations").glob("*.sql")) + [SEED]
+    for f in files:
+        parts.append(f"\n-- >>>>>>>>>> supabase/{f.relative_to(ROOT / 'supabase').as_posix()}\n")
+        parts.append(f.read_text(encoding="utf-8").replace("\r\n", "\n"))
+    return "".join(parts)
+
+
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")  # konsol Windows (cp1252)
     parser = argparse.ArgumentParser(description="Bank soal ORBIT MATH dari supabase/seed.sql")
     parser.add_argument("--check", action="store_true", help="hanya validasi, tidak menulis file")
     args = parser.parse_args(argv)
@@ -246,7 +263,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if not args.check:
         TS_OUT.write_text(to_typescript(bank), encoding="utf-8", newline="\n")
-        print(f"OK: {summary} → {TS_OUT.relative_to(ROOT)}")
+        SETUP_ALL.write_text(build_setup_all(), encoding="utf-8", newline="\n")
+        print(f"OK: {summary} → {TS_OUT.relative_to(ROOT)} & {SETUP_ALL.relative_to(ROOT)}")
     else:
         print(f"OK: {summary} (valid)")
     return 0

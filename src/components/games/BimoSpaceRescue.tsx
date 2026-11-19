@@ -6,6 +6,7 @@ import { rescueChallenge, type RescueChallenge } from "@/lib/games";
 import { formatNumber } from "@/lib/math";
 import { Bimo } from "@/components/bimo/Bimo";
 import type { GameFinish } from "./GameShell";
+import { playSfx } from "@/lib/sound";
 
 const NEEDED = 5;
 const SHIELDS = 3;
@@ -26,6 +27,7 @@ export function BimoSpaceRescue({ onFinish }: { onFinish: (r: GameFinish) => voi
     if (picked !== null) return;
     setPicked(i);
     setAttempts((a) => a + 1);
+    playSfx(ch.options[i] === ch.answer ? "correct" : "wrong");
     if (ch.options[i] === ch.answer) {
       setEnergy((e) => e + 1);
       setBoost(true);

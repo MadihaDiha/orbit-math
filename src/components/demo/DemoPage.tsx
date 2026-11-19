@@ -1,7 +1,7 @@
 "use client";
 
 import { useDemoState } from "@/lib/demo/store";
-import { demoAchievements, demoDashboard, demoExam, demoPlayground, demoProfile, demoProgress, demoTraining } from "@/lib/demo/queries";
+import { demoAchievements, demoDashboard, demoExam, demoJourneyData, demoPlayground, demoProfile, demoResults, demoTraining } from "@/lib/demo/queries";
 import { getMission } from "@/content/missions";
 import { LoadingPanel } from "@/components/ui/Spinner";
 import { DashboardView } from "@/components/views/DashboardView";
@@ -13,8 +13,10 @@ import { ExamView } from "@/components/views/ExamView";
 import { ProfileView } from "@/components/views/ProfileView";
 import { HistoryView } from "@/components/views/HistoryView";
 import { AchievementsView } from "@/components/views/AchievementsView";
+import { PosttestView, PretestView } from "@/components/views/TestViews";
+import { ResultsView } from "@/components/views/ResultsView";
 
-export type DemoViewName = "dashboard" | "galaxy" | "mission" | "training" | "playground" | "exam" | "profile" | "history" | "achievements";
+export type DemoViewName = "dashboard" | "galaxy" | "mission" | "training" | "playground" | "exam" | "profile" | "history" | "achievements" | "pretest" | "posttest" | "results";
 
 /** Merender halaman privat dengan data Mode Demo (localStorage). */
 export function DemoPage({ view, slug }: { view: DemoViewName; slug?: string }) {
@@ -25,10 +27,10 @@ export function DemoPage({ view, slug }: { view: DemoViewName; slug?: string }) 
     case "dashboard":
       return <DashboardView data={demoDashboard(s)} />;
     case "galaxy":
-      return <GalaxyView progress={demoProgress(s)} />;
+      return <GalaxyView data={demoJourneyData(s)} />;
     case "mission": {
       const mission = slug ? getMission(slug) : undefined;
-      return mission ? <MissionView key={slug} mission={mission} progress={demoProgress(s)} /> : null;
+      return mission ? <MissionView key={slug} mission={mission} data={demoJourneyData(s)} /> : null;
     }
     case "training":
       return <TrainingView data={demoTraining(s, TRAINING_SLUGS)} />;
@@ -42,5 +44,11 @@ export function DemoPage({ view, slug }: { view: DemoViewName; slug?: string }) 
       return <HistoryView rows={s.logs} />;
     case "achievements":
       return <AchievementsView data={demoAchievements(s)} />;
+    case "pretest":
+      return <PretestView data={demoJourneyData(s)} />;
+    case "posttest":
+      return <PosttestView data={demoJourneyData(s)} />;
+    case "results":
+      return <ResultsView data={demoResults(s)} />;
   }
 }

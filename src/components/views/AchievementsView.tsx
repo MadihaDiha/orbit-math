@@ -8,10 +8,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { AchievementIcon } from "@/components/reward/AchievementIcon";
 
 export function AchievementsView({ data }: { data: AchievementsData }) {
-  const { all, stats, progress } = data;
+  const { all, stats, progress, journey } = data;
   const earnedAt = new Map(Object.entries(data.earnedAt));
   const lp = levelProgress(stats.total_xp);
-  const states = missionStates(progress);
+  const states = missionStates(progress, journey);
   const starsById = new Map(progress.map((p) => [p.lesson_id, p.stars]));
 
   return (

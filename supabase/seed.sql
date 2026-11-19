@@ -30,7 +30,9 @@ insert into public.quizzes (slug, title, kind, lesson_id, level, pass_score, xp_
   ('training-2', 'Training Level 2 — Space Navigator',   'training', null, 2, 70, 75, 10, true),
   ('training-3', 'Training Level 3 — Galaxy Expert',     'training', null, 3, 70, 100, 8, true),
   ('exam',  'Final Examination',  'exam',  null, null, 70, 200, 20, true),
-  ('daily', 'Tantangan Harian',   'daily', null, null, 100, 30, 1, false)
+  ('daily', 'Tantangan Harian',   'daily', null, null, 100, 30, 1, false),
+  ('pretest',  'Pre-test — Cek Pengetahuan Awal',  'pretest',  null, null, 0, 20, 10, false),
+  ('posttest', 'Post-test — Misi Pulang ke Bumi',  'posttest', null, null, 70, 100, 10, false)
 on conflict (slug) do update set title = excluded.title, kind = excluded.kind, lesson_id = excluded.lesson_id,
   level = excluded.level, pass_score = excluded.pass_score, xp_reward = excluded.xp_reward,
   default_count = excluded.default_count, shuffle = excluded.shuffle;
@@ -56,7 +58,9 @@ insert into public.achievements (slug, title, description, icon, xp_reward, sort
   ('daily-hero',        'Daily Spark',        'Menjawab benar Tantangan Harian.',                         'zap',        25, 7),
   ('game-explorer',     'Playground Voyager', 'Memainkan kelima permainan di Cosmic Playground.',         'gamepad',    50, 8),
   ('galaxy-champion',   'Galaxy Champion',    'Lulus Evaluasi Akhir (Final Examination).',                'trophy',    100, 9),
-  ('perfect-orbit',     'Perfect Orbit',      'Meraih nilai sempurna 100 pada Evaluasi Akhir.',           'star',      100, 10)
+  ('perfect-orbit',     'Perfect Orbit',      'Meraih nilai sempurna 100 pada Evaluasi Akhir.',           'star',      100, 10),
+  ('pre-flight',        'Pre-Flight Check',   'Menyelesaikan Pre-test sebelum berangkat.',                'clipboard',  20, 0),
+  ('young-astronaut',   'Astronot Muda',      'Menyelesaikan Post-test dan seluruh petualangan galaksi.', 'medal',     100, 11)
 on conflict (slug) do update set title = excluded.title, description = excluded.description,
   icon = excluded.icon, xp_reward = excluded.xp_reward, sort_order = excluded.sort_order;
 
@@ -391,5 +395,69 @@ select private.seed_q('daily','story','Jarak tempuh roda',3,'Roda berjari-jari 7
   null,'{"value":220,"alt":[219.8]}','Keliling = 2 × 22/7 × 7 = 44 cm. Jarak = 5 × 44 = 220 cm.', 'wheel:r = 7 cm', 'cm');
 select private.seed_q('daily','numeric','Mencari diameter',3,'Keliling lingkaran 94,2 cm. Berapa cm diameternya? (π = 3,14)',
   null,'{"value":30}','d = K ÷ π = 94,2 ÷ 3,14 = 30 cm.', null, 'cm');
+
+-- ===== PRE-TEST (sebelum materi) =====
+select private.seed_q('pretest','mcq','Pengertian lingkaran',1,'Lingkaran adalah ...',
+  '["kumpulan titik yang berjarak sama dari titik pusat","bangun datar dengan empat sisi sama panjang","bangun datar dengan tiga titik sudut","garis lurus yang sangat panjang"]','{"index":0}',
+  'Lingkaran adalah kumpulan titik yang jaraknya sama terhadap satu titik pusat.', null, null);
+select private.seed_q('pretest','identify','Unsur lingkaran',1,'Garis yang menyala pada gambar adalah ...',
+  '["Diameter","Jari-jari","Busur","Tali busur"]','{"index":1}',
+  'Garis dari titik pusat ke tepi lingkaran disebut jari-jari.', 'anatomy:radius', null);
+select private.seed_q('pretest','mcq','Jari-jari dan diameter',1,'Jari-jari sebuah lingkaran 8 cm. Diameternya adalah ...',
+  '["4 cm","8 cm","16 cm","64 cm"]','{"index":2}',
+  'd = 2 × r = 2 × 8 = 16 cm.', 'circle-r:8 cm', null);
+select private.seed_q('pretest','mcq','Nilai pi',1,'Nilai π mendekati ...',
+  '["2,14","3,14","4,13","1,41"]','{"index":1}',
+  'π ≈ 3,14 atau 22/7.', null, null);
+select private.seed_q('pretest','mcq','Konsep keliling',1,'Keliling lingkaran adalah ...',
+  '["panjang garis lengkung yang mengelilingi lingkaran","luas daerah di dalam lingkaran","jarak dari pusat ke tepi lingkaran","garis yang melalui titik pusat"]','{"index":0}',
+  'Keliling = panjang garis lengkung yang mengelilingi lingkaran satu putaran penuh.', null, null);
+select private.seed_q('pretest','mcq','Rumus keliling',2,'Rumus keliling lingkaran jika diketahui diameter adalah ...',
+  '["K = π × d","K = π × r × r","K = 2 × d","K = d ÷ π"]','{"index":0}',
+  'K = π × d. Jika yang diketahui jari-jari, gunakan K = 2 × π × r.', null, null);
+select private.seed_q('pretest','mcq','Menghitung keliling',2,'Jari-jari lingkaran 7 cm. Kelilingnya adalah ... (π = 22/7)',
+  '["22 cm","44 cm","154 cm","49 cm"]','{"index":1}',
+  'K = 2 × 22/7 × 7 = 2 × 22 = 44 cm.', 'circle-r:7 cm', null);
+select private.seed_q('pretest','mcq','Menghitung keliling',2,'Diameter lingkaran 10 cm. Kelilingnya adalah ... (π = 3,14)',
+  '["31,4 cm","62,8 cm","314 cm","15,7 cm"]','{"index":0}',
+  'K = π × d = 3,14 × 10 = 31,4 cm.', 'circle-d:10 cm', null);
+select private.seed_q('pretest','mcq','Jarak tempuh roda',3,'Roda berjari-jari 14 cm berputar satu kali. Jarak yang ditempuh adalah ... (π = 22/7)',
+  '["44 cm","88 cm","616 cm","28 cm"]','{"index":1}',
+  'Jarak satu putaran = keliling = 2 × 22/7 × 14 = 88 cm.', 'wheel:r = 14 cm', null);
+select private.seed_q('pretest','mcq','Soal cerita',3,'Taman berbentuk lingkaran berdiameter 20 m akan dipagari. Panjang pagar yang dibutuhkan adalah ... (π = 3,14)',
+  '["31,4 m","62,8 m","125,6 m","314 m"]','{"index":1}',
+  'Panjang pagar = keliling = 3,14 × 20 = 62,8 m.', 'garden:d = 20 m', null);
+
+-- ===== POST-TEST (setelah semua planet; soal paralel dengan pre-test) =====
+select private.seed_q('posttest','mcq','Pengertian lingkaran',1,'Pernyataan yang benar tentang lingkaran adalah ...',
+  '["Semua titik pada lingkaran berjarak sama dari titik pusat","Lingkaran memiliki empat titik sudut","Jari-jari selalu lebih panjang dari diameter","Lingkaran tersusun dari garis-garis lurus"]','{"index":0}',
+  'Ciri utama lingkaran: semua titiknya berjarak sama (jari-jari) dari titik pusat.', null, null);
+select private.seed_q('posttest','identify','Unsur lingkaran',1,'Garis yang menyala pada gambar adalah ...',
+  '["Jari-jari","Tali busur","Diameter","Juring"]','{"index":2}',
+  'Garis lurus yang melewati titik pusat dan menghubungkan dua titik pada lingkaran adalah diameter.', 'anatomy:diameter', null);
+select private.seed_q('posttest','mcq','Jari-jari dan diameter',1,'Diameter sebuah lingkaran 18 cm. Jari-jarinya adalah ...',
+  '["36 cm","9 cm","18 cm","6 cm"]','{"index":1}',
+  'r = d ÷ 2 = 18 ÷ 2 = 9 cm.', 'circle-d:18 cm', null);
+select private.seed_q('posttest','mcq','Nilai pi',1,'Bentuk pecahan yang mendekati nilai π adalah ...',
+  '["7/22","22/7","14/3","3/14"]','{"index":1}',
+  '22/7 = 3,142857… sangat dekat dengan π.', null, null);
+select private.seed_q('posttest','mcq','Konsep keliling',2,'Roda yang berputar satu kali tanpa tergelincir menempuh jarak yang sama dengan ...',
+  '["diameter roda","jari-jari roda","keliling roda","luas roda"]','{"index":2}',
+  'Satu putaran penuh menempuh jarak sepanjang keliling roda.', 'wheel:1 putaran', null);
+select private.seed_q('posttest','mcq','Rumus keliling',2,'Rumus keliling lingkaran jika diketahui jari-jari adalah ...',
+  '["K = π × r","K = 2 × π × r","K = π × r × r","K = r ÷ 2"]','{"index":1}',
+  'K = 2 × π × r, karena d = 2 × r sehingga π × d = 2 × π × r.', null, null);
+select private.seed_q('posttest','mcq','Menghitung keliling',2,'Jari-jari lingkaran 21 cm. Kelilingnya adalah ... (π = 22/7)',
+  '["66 cm","132 cm","1.386 cm","42 cm"]','{"index":1}',
+  'K = 2 × 22/7 × 21 = 2 × 22 × 3 = 132 cm.', 'circle-r:21 cm', null);
+select private.seed_q('posttest','mcq','Menghitung keliling',2,'Diameter lingkaran 20 cm. Kelilingnya adalah ... (π = 3,14)',
+  '["31,4 cm","62,8 cm","125,6 cm","314 cm"]','{"index":1}',
+  'K = π × d = 3,14 × 20 = 62,8 cm.', 'circle-d:20 cm', null);
+select private.seed_q('posttest','mcq','Jarak tempuh roda',3,'Roda berjari-jari 35 cm berputar satu kali. Jarak yang ditempuh adalah ... (π = 22/7)',
+  '["110 cm","220 cm","3.850 cm","70 cm"]','{"index":1}',
+  'Jarak satu putaran = 2 × 22/7 × 35 = 2 × 22 × 5 = 220 cm.', 'wheel:r = 35 cm', null);
+select private.seed_q('posttest','mcq','Soal cerita',3,'Meja bundar berdiameter 140 cm akan dihias pita di tepinya. Panjang pita yang dibutuhkan adalah ... (π = 22/7)',
+  '["220 cm","440 cm","880 cm","154 cm"]','{"index":1}',
+  'Panjang pita = keliling = 22/7 × 140 = 22 × 20 = 440 cm.', 'table:d = 140 cm', null);
 
 drop function private.seed_q(text, text, text, int, text, jsonb, jsonb, text, text, text);

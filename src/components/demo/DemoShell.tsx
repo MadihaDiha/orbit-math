@@ -43,7 +43,7 @@ export function DemoBanner() {
   return (
     <p className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold">
       <FlaskConical size={14} /> Mode Demo — progres tersimpan di browser ini saja.
-      <Link href="/#mode-demo" className="underline">Apa artinya?</Link>
+      <Link href="/tentang#mode-demo" className="underline">Apa artinya?</Link>
     </p>
   );
 }

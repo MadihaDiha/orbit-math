@@ -3,7 +3,7 @@
 import re
 import unittest
 
-from orbit_math.bank import ROOT, TS_OUT, load_bank, to_typescript, validate
+from orbit_math.bank import ROOT, SETUP_ALL, TS_OUT, build_setup_all, load_bank, to_typescript, validate
 from orbit_math.games import GAMES
 from orbit_math.levels import LEVELS, level_for_xp, level_progress, stars_for_score
 
@@ -45,6 +45,17 @@ class TestBankSoal(unittest.TestCase):
     def test_questionbank_ts_sesuai_seed(self):
         """src/content/questionBank.ts harus hasil generate terbaru dari seed.sql."""
         self.assertEqual(TS_OUT.read_text(encoding="utf-8").replace("\r\n", "\n"), to_typescript(load_bank()))
+
+    def test_setup_all_terbaru(self):
+        self.assertEqual(SETUP_ALL.read_text(encoding="utf-8").replace("\r\n", "\n"), build_setup_all())
+
+    def test_pretest_posttest_paralel(self):
+        bank = load_bank()
+        pre, post = bank.questions_for("pretest"), bank.questions_for("posttest")
+        self.assertEqual(len(pre), 10)
+        self.assertEqual(len(post), 10)
+        self.assertEqual([q.topic for q in pre], [q.topic for q in post])
+        self.assertTrue(all(q.qtype in ("mcq", "identify") for q in pre + post))
 
     def test_game_sama_dengan_seed(self):
         bank = load_bank()

@@ -9,6 +9,9 @@ export const PRIVATE_PREFIXES = [
   "/profile",
   "/history",
   "/achievements",
+  "/pretest",
+  "/posttest",
+  "/results",
 ];
 
 /** Halaman yang hanya untuk tamu: jika sudah login diarahkan ke dashboard. */

@@ -5,6 +5,7 @@ import { Satellite, Timer } from "lucide-react";
 import { orbitSet, scoreOrbit } from "@/lib/games";
 import { formatNumber, parseNumberInput } from "@/lib/math";
 import type { GameFinish } from "./GameShell";
+import { playSfx } from "@/lib/sound";
 
 const STAGE_NAMES = { 1: "Tahap 1 · Diameter → Keliling", 2: "Tahap 2 · Jari-jari → Keliling", 3: "Tahap 3 · Keliling → Diameter" } as const;
 
@@ -37,6 +38,7 @@ export function OrbitCalculation({ onFinish }: { onFinish: (r: GameFinish) => vo
     setError(null);
     const res = scoreOrbit(n, p.answer, seconds);
     setFeedback(res);
+    playSfx(res.exact ? "correct" : res.close ? "star" : "wrong");
     setScore((s) => s + res.points);
     if (res.exact) setCorrect((c) => c + 1);
   };

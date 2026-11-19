@@ -6,6 +6,7 @@ import { ArrowRight, RotateCcw, ShieldCheck } from "lucide-react";
 import { rpc } from "@/lib/rpc";
 import { friendlyError } from "@/lib/errors";
 import { pickLine, scoreMessage } from "@/lib/bimo-lines";
+import { playSfx } from "@/lib/sound";
 import type { CheckResult, GivenAnswer, QuizResult, StartedQuiz } from "@/lib/types";
 import { QuestionInput, isAnswered } from "./QuestionInput";
 import { ReviewList } from "./ReviewList";
@@ -61,6 +62,7 @@ export function TrainingRunner({ slug }: { slug: string }) {
       setFeedback(res);
       setAnswers((a) => ({ ...a, [String(q.id)]: current }));
       if (res.is_correct) setCorrectCount((c) => c + 1);
+      playSfx(res.is_correct ? "correct" : "wrong");
     } catch (e) {
       setError(friendlyError(e));
     } finally {

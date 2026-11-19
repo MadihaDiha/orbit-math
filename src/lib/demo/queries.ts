@@ -1,12 +1,20 @@
 import { BANK_ACHIEVEMENTS } from "@/content/questionBank";
-import { missionStates } from "@/lib/progress";
+import { buildJourney, missionStates, type JourneyFlags } from "@/lib/progress";
 import type { AchievementRow, LessonProgressRow, Profile } from "@/lib/types";
-import type { AchievementsData, DashboardData, ExamData, PlaygroundData, ProfileData, TrainingData } from "@/lib/view-types";
+import type { AchievementsData, DashboardData, ExamData, JourneyData, PlaygroundData, ProfileData, ResultsData, TrainingData } from "@/lib/view-types";
 import type { DemoState } from "./store";
 
 /** Turunan data halaman dari state Mode Demo (setara query Supabase di lib/data.ts). */
 export function demoProgress(s: DemoState): LessonProgressRow[] {
   return Object.values(s.lessons);
+}
+
+export function demoJourney(s: DemoState): JourneyFlags {
+  return buildJourney(s.quizAttempts.filter((a) => a.kind === "pretest" || a.kind === "posttest"));
+}
+
+export function demoJourneyData(s: DemoState): JourneyData {
+  return { progress: demoProgress(s), journey: demoJourney(s) };
 }
 
 function badges(s: DemoState): AchievementRow[] {
@@ -21,6 +29,7 @@ export function demoDashboard(s: DemoState): DashboardData {
     activities: s.logs.slice(0, 5),
     badges: badges(s),
     gamesPlayed: s.gameAttempts.length,
+    journey: demoJourney(s),
   };
 }
 
@@ -44,7 +53,7 @@ export function demoPlayground(s: DemoState): PlaygroundData {
 
 export function demoExam(s: DemoState): ExamData {
   return {
-    unlocked: missionStates(demoProgress(s))[7] !== "locked",
+    unlocked: missionStates(demoProgress(s), demoJourney(s))[7] !== "locked",
     attempts: s.quizAttempts.filter((a) => a.kind === "exam").slice(0, 10),
   };
 }
@@ -64,5 +73,9 @@ export function demoProfile(s: DemoState): ProfileData {
 }
 
 export function demoAchievements(s: DemoState): AchievementsData {
-  return { all: [...BANK_ACHIEVEMENTS].sort((a, b) => a.sort_order - b.sort_order), earnedAt: s.achievements, stats: s.stats, progress: demoProgress(s) };
+  return { all: [...BANK_ACHIEVEMENTS].sort((a, b) => a.sort_order - b.sort_order), earnedAt: s.achievements, stats: s.stats, progress: demoProgress(s), journey: demoJourney(s) };
+}
+
+export function demoResults(s: DemoState): ResultsData {
+  return { profile: s.profile as Profile, stats: s.stats, progress: demoProgress(s), journey: demoJourney(s), badges: badges(s) };
 }

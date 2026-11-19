@@ -1,4 +1,5 @@
 import type { AchievementRow, ActivityLog, LessonProgressRow, Profile, UserStats } from "@/lib/types";
+import type { JourneyFlags } from "@/lib/progress";
 
 /** Data yang dibutuhkan setiap halaman. Diisi dari Supabase ATAU dari Mode Demo. */
 export interface DashboardData {
@@ -8,6 +9,7 @@ export interface DashboardData {
   activities: ActivityLog[];
   badges: AchievementRow[];
   gamesPlayed: number;
+  journey: JourneyFlags;
 }
 
 export interface TrainingData {
@@ -48,4 +50,18 @@ export interface AchievementsData {
   earnedAt: Record<string, string>;
   stats: UserStats;
   progress: LessonProgressRow[];
+  journey: JourneyFlags;
+}
+
+export interface JourneyData {
+  progress: LessonProgressRow[];
+  journey: JourneyFlags;
+}
+
+export interface ResultsData {
+  profile: Profile;
+  stats: UserStats;
+  progress: LessonProgressRow[];
+  journey: JourneyFlags;
+  badges: AchievementRow[];
 }

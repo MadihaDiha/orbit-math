@@ -6,6 +6,8 @@ import { Sparkles, X } from "lucide-react";
 import type { EarnedAchievement } from "@/lib/types";
 import { AchievementIcon } from "./AchievementIcon";
 import { Bimo } from "@/components/bimo/Bimo";
+import { StarBurst } from "@/components/fx/StarBurst";
+import { playSfx } from "@/lib/sound";
 
 interface Toast {
   id: number;
@@ -17,6 +19,8 @@ interface RewardContextValue {
   /** Tampilkan XP & lencana baru, lalu segarkan data server (XP di header). */
   celebrate: (opts: { xp?: number; achievements?: EarnedAchievement[]; message?: string }) => void;
   notify: (text: string, tone?: Toast["tone"]) => void;
+  /** Ledakan bintang + suara (misalnya saat misi/planet selesai). */
+  burst: () => void;
 }
 
 const RewardContext = createContext<RewardContextValue | null>(null);
@@ -33,6 +37,14 @@ export function RewardProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [badges, setBadges] = useState<EarnedAchievement[]>([]);
+  const [bursts, setBursts] = useState<number[]>([]);
+
+  const burst = useCallback(() => {
+    const id = Date.now() + Math.random();
+    setBursts((b) => [...b, id]);
+    playSfx("complete");
+    setTimeout(() => setBursts((b) => b.filter((x) => x !== id)), 1800);
+  }, []);
 
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
     const id = ++toastId;
@@ -45,16 +57,20 @@ export function RewardProvider({ children }: { children: ReactNode }) {
       if (message) notify(message, "info");
       if (xp && xp > 0) notify(`+${xp} XP energi galaksi!`, "xp");
       if (achievements && achievements.length > 0) setBadges((b) => [...b, ...achievements]);
+      if ((xp && xp > 0) || (achievements && achievements.length > 0)) burst();
       router.refresh();
     },
-    [notify, router],
+    [notify, router, burst],
   );
 
   const current = badges[0];
 
   return (
-    <RewardContext.Provider value={{ celebrate, notify }}>
+    <RewardContext.Provider value={{ celebrate, notify, burst }}>
       {children}
+      {bursts.map((b) => (
+        <StarBurst key={b} seed={Math.floor(b % 1000)} />
+      ))}
 
       <div className="pointer-events-none fixed inset-x-0 top-20 z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite">
         {toasts.map((t) => (
@@ -83,7 +99,7 @@ export function RewardProvider({ children }: { children: ReactNode }) {
             </button>
             <p className="eyebrow text-gold">Lencana baru terbuka!</p>
             <div className="my-5 flex items-center justify-center gap-4">
-              <Bimo mood="proud" size={84} />
+              <Bimo mood="proud" size={84} talking />
               <div className="animate-[spin-slow_6s_linear_infinite]">
                 <AchievementIcon icon={current.icon} size={34} />
               </div>

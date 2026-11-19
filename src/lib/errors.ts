@@ -19,6 +19,8 @@ export function friendlyError(err: unknown): string {
   if (msg.includes("auth session missing") || msg.includes("not_authenticated")) return "Sesi login berakhir. Silakan login kembali.";
   if (msg.includes("lesson_locked")) return "Misi ini masih terkunci. Selesaikan misi sebelumnya dulu.";
   if (msg.includes("exam_locked")) return "Evaluasi akhir terbuka setelah Misi 6 selesai.";
+  if (msg.includes("pretest_done")) return "Pre-test sudah pernah kamu kerjakan. Lanjutkan petualangan di Peta Galaksi!";
+  if (msg.includes("posttest_locked")) return "Post-test terbuka setelah Stasiun Final selesai.";
   if (msg.includes("quiz_not_passed")) return "Selesaikan mini quiz dengan nilai minimal 60 terlebih dahulu.";
   if (msg.includes("session_already_submitted")) return "Jawaban untuk sesi ini sudah dikumpulkan.";
   if (msg.includes("session_expired")) return "Sesi kuis sudah kedaluwarsa. Mulai ulang kuisnya.";

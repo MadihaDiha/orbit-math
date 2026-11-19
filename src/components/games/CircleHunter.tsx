@@ -6,6 +6,7 @@ import { hunterRound, scoreHunterRound } from "@/lib/games";
 import { OBJECT_INFO } from "@/lib/objects";
 import { ObjectIcon } from "@/components/cosmic/ObjectIcon";
 import type { GameFinish } from "./GameShell";
+import { playSfx } from "@/lib/sound";
 
 const ROUNDS = 5;
 const TIME = 25;
@@ -27,6 +28,7 @@ export function CircleHunter({ onFinish }: { onFinish: (r: GameFinish) => void }
     setScore((s) => s + r.score);
     setCorrect((c) => c + r.correct);
     setRoundPts(r.score);
+    playSfx(r.score >= 30 ? "correct" : r.score > 0 ? "star" : "wrong");
     setChecked(true);
   }, [checked, objects, selected]);
 
@@ -54,6 +56,7 @@ export function CircleHunter({ onFinish }: { onFinish: (r: GameFinish) => void }
 
   const toggle = (o: string) => {
     if (checked) return;
+    playSfx("select");
     setSelected((s) => {
       const n = new Set(s);
       if (n.has(o)) n.delete(o);

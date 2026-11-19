@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Flame } from "lucide-react";
 import { segmentRound, type SegmentKind, type SegmentRound } from "@/lib/games";
 import type { GameFinish } from "./GameShell";
+import { playSfx } from "@/lib/sound";
 
 const ROUNDS = 10;
 const LABELS: Record<SegmentKind, string> = { radius: "Jari-jari", diameter: "Diameter", chord: "Tali busur" };
@@ -54,6 +55,7 @@ export function RadiusOrDiameter({ onFinish }: { onFinish: (r: GameFinish) => vo
   const choose = (k: SegmentKind) => {
     if (answer) return;
     setAnswer(k);
+    playSfx(k === round.kind ? "correct" : "wrong");
     if (k === round.kind) {
       setCorrect((c) => c + 1);
       const nextCombo = combo + 1;

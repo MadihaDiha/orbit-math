@@ -87,7 +87,11 @@ export function MissionFinish({ slug, lessonId, quizSlug, bestScore, completed, 
             {busy ? <Spinner /> : done ? <CheckCircle2 size={18} /> : <Rocket size={18} />} {done ? "Misi selesai ✓ (perbarui bintang)" : "Selesaikan Misi"}
           </button>
           {lessonId === 7 ? (
-            <Link href="/exam" className="btn-primary"><GraduationCap size={18} /> Final Examination</Link>
+            done ? (
+              <Link href="/posttest" className="btn-primary btn-glow"><GraduationCap size={18} /> Portal Pulang: Post-test</Link>
+            ) : (
+              <span className="btn-ghost cursor-not-allowed opacity-50" aria-disabled="true" title="Selesaikan Stasiun Final dulu"><GraduationCap size={18} /> Post-test</span>
+            )
           ) : nextSlug && done ? (
             <Link href={`/missions/${nextSlug}`} className="btn-primary">Misi berikutnya: {nextTitle} <ArrowRight size={18} /></Link>
           ) : (
