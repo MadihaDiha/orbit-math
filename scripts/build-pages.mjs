@@ -14,6 +14,7 @@ const hold = join(root, ".pages-hold");
 const moves = [
   [join(root, "src", "middleware.ts"), join(hold, "middleware.ts")],
   [join(root, "src", "app", "auth"), join(hold, "auth")],
+  [join(root, "src", "app", "api"), join(hold, "api")],
 ];
 
 rmSync(hold, { recursive: true, force: true });
@@ -35,6 +36,9 @@ try {
       PAGES_BASE_PATH: process.env.PAGES_BASE_PATH ?? "/orbit-math",
       NEXT_PUBLIC_SUPABASE_URL: "",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "",
+      NEXT_PUBLIC_STATIC_EXPORT: "true",
+      // API key AI tidak pernah dipakai di situs statis
+      DEEPSEEK_API_KEY: "",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   });

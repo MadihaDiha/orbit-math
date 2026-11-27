@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <RewardProvider>
       <AppNav name={profile.full_name} username={profile.username} xp={stats.total_xp} avatar={profile.avatar_color} />
       <div className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:pb-16 sm:pt-8">{children}</div>
-      <BimoGuide />
+      <BimoGuide owner={profile.id} />
     </RewardProvider>
   );
 }

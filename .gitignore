@@ -14,3 +14,5 @@ npm-debug.log*
 .pages-hold
 __pycache__/
 *.pyc
+supabase/.temp
+supabase/functions/.env

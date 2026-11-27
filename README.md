@@ -86,6 +86,41 @@ python -m unittest discover -s tests    # 35 unit test (juga memeriksa sinkron d
 
 Dari root proyek: `npm run gen:bank` (generate bank soal) dan `npm run test:py`.
 
+## BIMO AI (chatbot DeepSeek)
+
+BIMO juga bisa menjadi **Asisten Belajar AI**. Buka dari BIMO yang melayang di pojok kanan bawah → **Tanya BIMO AI**.
+
+**Fungsi pedagogis (bukan sekadar menjawab):**
+- **6 langkah pemecahan masalah** — memahami situasi → diketahui & ditanya → mengenali konsep → menentukan strategi → menyelesaikan bertahap → memeriksa & refleksi. BIMO membimbing satu langkah per balasan dan menandai langkahnya (`[LANGKAH n]`), yang ditampilkan sebagai indikator 1–6 di panel chat.
+- **Cognitive Load Theory** — *intrinsic* (soal dipecah menjadi langkah kecil, satu konsep baru per balasan), *extraneous* (kalimat pendek, ±120 kata, tanpa LaTeX), *germane* (menghubungkan konsep seperti d = 2 × r dan π = K ÷ d, contoh nyata, refleksi).
+- Tidak memberi jawaban akhir sebelum siswa mencoba; jawaban salah dijelaskan letak kekeliruannya; jawaban benar diberi apresiasi spesifik. Konteks halaman/misi yang sedang dibuka ikut dikirim agar BIMO tetap pada materi Keliling Lingkaran.
+- Prompt sistem hanya ada di server (`supabase/functions/_shared/bimo.ts`), tidak bisa diubah dari browser.
+
+**Keamanan API key:** key DeepSeek **tidak pernah** ada di browser maupun repositori. Browser hanya memanggil backend ORBIT MATH, lalu backend yang memanggil `https://api.deepseek.com/chat/completions`. Ada validasi pesan, batas laju (15 pesan / 5 menit per siswa), dan dengan Supabase hanya siswa yang login yang bisa memakai.
+
+### Cara mengaktifkan
+Dapatkan API key di https://platform.deepseek.com/api_keys, lalu pilih salah satu:
+
+**A. Lokal / Vercel (route `/api/bimo-chat`)** — isi di `.env.local` (lokal) atau *Vercel → Settings → Environment Variables*:
+```env
+DEEPSEEK_API_KEY=sk-xxxxxxxx        # TANPA awalan NEXT_PUBLIC_
+DEEPSEEK_MODEL=deepseek-chat        # opsional
+```
+Lalu jalankan ulang `npm run dev` (atau redeploy Vercel). `.env.local` sudah ada di `.gitignore`.
+
+**B. Supabase Edge Function** (jika memakai Supabase):
+```bash
+npx supabase login
+npx supabase link --project-ref <project-ref>
+npx supabase secrets set DEEPSEEK_API_KEY=sk-xxxxxxxx
+npx supabase functions deploy bimo-chat
+```
+Lalu set `NEXT_PUBLIC_BIMO_AI_BACKEND=supabase` di environment aplikasi.
+
+Tanpa API key, panel chat menampilkan pesan konfigurasi yang jelas (tidak ada key palsu). Situs demo statis di GitHub Pages tidak memiliki server, jadi di sana BIMO AI hanya menampilkan petunjuk cara mengaktifkannya.
+
+**File terkait:** `supabase/functions/_shared/bimo.ts` (inti: prompt, validasi, panggilan DeepSeek, error), `src/app/api/bimo-chat/route.ts` (backend Next.js), `supabase/functions/bimo-chat/index.ts` (Edge Function), `src/lib/bimo-ai.ts` (klien & riwayat chat), `src/components/bimo/BimoChat.tsx` (panel chat), `tests/bimo-ai.test.ts`.
+
 ## Struktur Folder
 
 ```

@@ -2,18 +2,24 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, MessageCircle, X } from "lucide-react";
 import { BIMO_TIPS } from "@/lib/bimo-lines";
 import { playSfx } from "@/lib/sound";
 import { Bimo } from "./Bimo";
+import { BimoChat } from "./BimoChat";
+import { useDemoState } from "@/lib/demo/store";
 
-/** BIMO pemandu melayang: menyapa di setiap halaman & memberi petunjuk bila diketuk. */
-export function BimoGuide() {
+/** BIMO pemandu melayang: menyapa di setiap halaman & memberi petunjuk bila diketuk.
+ *  Dari balon petunjuk, siswa juga bisa membuka chat BIMO AI (DeepSeek). */
+export function BimoGuide({ owner }: { owner?: string }) {
   const pathname = usePathname() || "/";
   const entry = useMemo(() => BIMO_TIPS.find((t) => pathname === t.prefix || pathname.startsWith(t.prefix + "/") || t.prefix === "/") ?? BIMO_TIPS[BIMO_TIPS.length - 1], [pathname]);
   const [open, setOpen] = useState(false);
   const [tip, setTip] = useState(-1); // -1 = sapaan
   const [hint, setHint] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const demo = useDemoState();
+  const chatOwner = owner ?? demo?.profile?.username ?? "tamu";
 
   // Sapaan singkat saat berpindah halaman
   useEffect(() => {
@@ -30,6 +36,10 @@ export function BimoGuide() {
   const toggle = () => {
     playSfx("click");
     setHint(false);
+    if (chatOpen) {
+      setChatOpen(false);
+      return;
+    }
     if (!open) {
       setTip(0);
       setOpen(true);
@@ -57,8 +67,20 @@ export function BimoGuide() {
           >
             {tip < 0 ? "Minta petunjuk" : "Petunjuk lain"} <ChevronRight size={14} />
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              playSfx("click");
+              setOpen(false);
+              setChatOpen(true);
+            }}
+            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-neon to-nebula px-3 py-2 text-xs font-extrabold text-white shadow-[0_0_18px_-4px_#318BFF] hover:brightness-110"
+          >
+            <MessageCircle size={14} /> Tanya BIMO AI
+          </button>
         </div>
       )}
+      {chatOpen && <BimoChat owner={chatOwner} onClose={() => setChatOpen(false)} />}
       <button
         type="button"
         onClick={toggle}
