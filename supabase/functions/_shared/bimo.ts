@@ -1,17 +1,26 @@
 /**
- * BIMO AI — inti chatbot pembelajaran ORBIT MATH (DeepSeek API).
+ * BIMO AI — inti chatbot pembelajaran ORBIT MATH (Google Gemini API, free tier).
  *
  * File ini dipakai bersama oleh DUA backend:
  *   1. Route Next.js            src/app/api/bimo-chat/route.ts   (npm run dev / Vercel)
  *   2. Supabase Edge Function   supabase/functions/bimo-chat     (Deno)
  * Karena itu file ini tidak memakai API khusus Node maupun Deno — hanya `fetch` standar.
  *
- * API key DeepSeek HANYA dibaca di server (environment / Supabase Secrets) dan tidak
+ * GEMINI_API_KEY HANYA dibaca di server (environment / Supabase Secrets) dan tidak
  * pernah dikirim ke browser.
+ *
+ * Referensi (dokumentasi resmi, diperiksa 27 Nov 2026):
+ *   - Endpoint: POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+ *     dengan header `x-goog-api-key`.
+ *   - Model gratis & stabil: gemini-3.5-flash-lite (dipakai default), gemini-3.6-flash, gemini-3.8-flash.
+ *     gemini-2.5-flash sudah deprecated (dialihkan mulai 1 Des 2026) sehingga tidak dipakai.
+ *   - Model Gemini 3.6+ mengabaikan `temperature` dan akan menolaknya di rilis mendatang → tidak dikirim.
+ *   - Token "berpikir" ikut dihitung dalam maxOutputTokens → batas output dibuat cukup longgar.
  */
 
-export const DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
-export const DEFAULT_MODEL = "deepseek-chat";
+export const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+/** Model free tier yang stabil, ringan, dan mode berpikirnya "minimal" secara bawaan. */
+export const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 
 export const LIMITS = {
   /** Jumlah pesan riwayat terakhir yang dikirim ke AI (menjaga konteks tetap fokus). */
@@ -21,7 +30,8 @@ export const LIMITS = {
   /** Panjang maksimal pesan BIMO sebelumnya yang dikirim ulang sebagai konteks. */
   maxAssistantChars: 2000,
   maxContextChars: 300,
-  maxTokens: 700,
+  /** Termasuk token "berpikir" model; balasan BIMO sendiri dibatasi ±120 kata lewat prompt. */
+  maxOutputTokens: 1024,
   timeoutMs: 35_000,
 } as const;
 
@@ -54,7 +64,7 @@ export type BimoErrorCode =
   | "unauthorized"
   | "rate_limited"
   | "invalid_key"
-  | "insufficient_balance"
+  | "blocked"
   | "upstream_busy"
   | "upstream_error"
   | "timeout"
@@ -82,11 +92,11 @@ export interface BimoResult {
 export const ERROR_MESSAGES: Record<BimoErrorCode, string> = {
   bad_request: "Pesannya belum bisa Bimo baca. Coba tulis ulang, ya!",
   not_configured:
-    "BIMO AI belum diaktifkan. Guru atau pengembang perlu memasukkan API key DeepSeek di server (lihat README bagian \"BIMO AI\").",
+    "BIMO AI online belum diaktifkan. Guru atau pengembang perlu memasukkan GEMINI_API_KEY di server (lihat README bagian \"BIMO AI\").",
   unauthorized: "Masuk dulu ke ORBIT MATH supaya bisa ngobrol dengan BIMO AI.",
-  rate_limited: "Wah, Bimo kebanyakan pertanyaan nih. Istirahat sebentar, lalu coba lagi dalam beberapa menit, ya!",
-  invalid_key: "Kunci API DeepSeek di server tidak valid. Minta guru/pengembang memeriksanya.",
-  insufficient_balance: "Saldo layanan AI sedang habis. Minta guru/pengembang mengisi saldo DeepSeek, ya.",
+  rate_limited: "Kuota gratis BIMO AI sedang penuh. Istirahat sebentar, lalu coba lagi beberapa menit lagi, ya!",
+  invalid_key: "Kunci API Gemini di server tidak valid. Minta guru/pengembang memeriksanya.",
+  blocked: "Bimo tidak bisa menjawab pertanyaan itu. Yuk, kembali membahas keliling lingkaran!",
   upstream_busy: "Server AI sedang sibuk sekali. Coba lagi sebentar lagi, ya!",
   upstream_error: "Sinyal ke markas AI terganggu. Coba kirim ulang pesannya, ya!",
   timeout: "Bimo berpikir terlalu lama dan sinyalnya terputus. Coba kirim ulang, ya!",
@@ -150,6 +160,7 @@ Baris pertama SELALU berupa penanda langkah yang sedang dibahas: [LANGKAH 1] sam
 function cleanText(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   // buang karakter kontrol kecuali baris baru & tab
+  // eslint-disable-next-line no-control-regex
   const text = value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
   if (!text) return null;
   return text.length > max ? text.slice(0, max) : text;
@@ -172,7 +183,7 @@ export function sanitizeRequest(raw: unknown): ChatRequestBody | null {
   }
   // pesan terakhir harus dari siswa
   if (messages[messages.length - 1].role !== "user") return null;
-  // DeepSeek mewajibkan pesan pertama setelah system berasal dari user
+  // percakapan dikirim ke Gemini dimulai dari giliran siswa
   while (messages.length && messages[0].role !== "user") messages.shift();
 
   const context = cleanText(body.context, LIMITS.maxContextChars) ?? undefined;
@@ -193,14 +204,36 @@ export function parseStep(text: string): { step: number; reply: string } {
 export interface BimoConfig {
   apiKey?: string | null;
   model?: string | null;
-  /** Hanya untuk pengujian (server tiruan). Default: endpoint resmi DeepSeek. */
-  apiUrl?: string | null;
+  /** Basis URL model Gemini. Default: endpoint resmi (diubah hanya untuk server tiruan saat pengujian). */
+  apiBase?: string | null;
 }
+
+/** Membaca konfigurasi Gemini dari environment server (GEMINI_API_KEY, GEMINI_MODEL). */
+export function configFromEnv(get: (name: string) => string | undefined): BimoConfig {
+  return { apiKey: get("GEMINI_API_KEY"), model: get("GEMINI_MODEL"), apiBase: get("GEMINI_API_BASE") };
+}
+
+/** Body permintaan generateContent: prompt sistem + riwayat (peran "assistant" → "model"). */
+export function buildGeminiRequest(req: ChatRequestBody) {
+  return {
+    systemInstruction: { parts: [{ text: buildSystemPrompt(req.context) }] },
+    contents: req.messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+    generationConfig: { maxOutputTokens: LIMITS.maxOutputTokens },
+  };
+}
+
+interface GeminiResponse {
+  candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] }; finishReason?: string }[];
+  promptFeedback?: { blockReason?: string };
+  modelVersion?: string;
+}
+
+const BLOCK_FINISH = new Set(["SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION"]);
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 /**
- * Memproses satu permintaan chat: validasi → panggil DeepSeek → rapikan balasan.
+ * Memproses satu permintaan chat: validasi → panggil Gemini → rapikan balasan.
  * Selalu mengembalikan {status, body} yang siap dikirim sebagai JSON.
  */
 export async function chatWithBimo(raw: unknown, config: BimoConfig, fetchImpl: FetchLike = fetch): Promise<BimoResult> {
@@ -211,7 +244,9 @@ export async function chatWithBimo(raw: unknown, config: BimoConfig, fetchImpl: 
   if (!req) return fail(400, "bad_request");
 
   const model = (config.model ?? "").trim() || DEFAULT_MODEL;
-  const url = (config.apiUrl ?? "").trim() || DEEPSEEK_API_URL;
+  if (!/^[a-z0-9][a-z0-9.-]*$/i.test(model)) return fail(503, "not_configured"); // cegah nama model aneh di URL
+  const base = ((config.apiBase ?? "").trim() || GEMINI_API_BASE).replace(/\/+$/, "");
+  const url = `${base}/${model}:generateContent`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LIMITS.timeoutMs);
@@ -219,14 +254,8 @@ export async function chatWithBimo(raw: unknown, config: BimoConfig, fetchImpl: 
   try {
     res = await fetchImpl(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: buildSystemPrompt(req.context) }, ...req.messages],
-        temperature: 0.6,
-        max_tokens: LIMITS.maxTokens,
-        stream: false,
-      }),
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify(buildGeminiRequest(req)),
       signal: controller.signal,
     });
   } catch (err) {
@@ -237,31 +266,39 @@ export async function chatWithBimo(raw: unknown, config: BimoConfig, fetchImpl: 
   }
 
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403) return fail(502, "invalid_key");
-    if (res.status === 402) return fail(502, "insufficient_balance");
-    if (res.status === 429) return fail(429, "rate_limited");
+    const detail = await res.text().catch(() => "");
+    // Key tidak valid: 401/403, atau 400 dengan alasan API_KEY_INVALID
+    if (res.status === 401 || res.status === 403 || /API_KEY_INVALID|API key not valid/i.test(detail)) return fail(502, "invalid_key");
+    if (res.status === 429) return fail(429, "rate_limited"); // RESOURCE_EXHAUSTED: kuota gratis per menit/hari
     if (res.status === 503) return fail(503, "upstream_busy");
     return fail(502, "upstream_error");
   }
 
-  let data: unknown;
+  let data: GeminiResponse;
   try {
-    data = await res.json();
+    data = (await res.json()) as GeminiResponse;
   } catch {
     return fail(502, "upstream_error");
   }
-  const content = (data as { choices?: { message?: { content?: unknown } }[] })?.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) return fail(502, "empty_reply");
+  if (data.promptFeedback?.blockReason) return fail(422, "blocked");
 
-  const { step, reply } = parseStep(content);
+  const candidate = data.candidates?.[0];
+  const text = (candidate?.content?.parts ?? [])
+    .filter((p) => !p.thought && typeof p.text === "string")
+    .map((p) => p.text)
+    .join("")
+    .trim();
+  if (!text) return candidate?.finishReason && BLOCK_FINISH.has(candidate.finishReason) ? fail(422, "blocked") : fail(502, "empty_reply");
+
+  const { step, reply } = parseStep(text);
   if (!reply) return fail(502, "empty_reply");
-  return { status: 200, body: { reply, step, model: (data as { model?: string }).model ?? model } };
+  return { status: 200, body: { reply, step, model: data.modelVersion ?? model } };
 }
 
 // ---------------------------------------------------------- pembatas laju
 /**
- * Pembatas laju sederhana di memori (per pengguna/IP) agar API key tidak disalahgunakan.
- * Catatan: di serverless, memori tidak dibagi antar-instance — ini lapisan perlindungan dasar.
+ * Pembatas laju sederhana di memori (per pengguna/IP) agar kuota gratis tidak cepat habis
+ * dan API key tidak disalahgunakan. Catatan: di serverless, memori tidak dibagi antar-instance.
  */
 export function createRateLimiter(maxRequests: number, windowMs: number) {
   const hits = new Map<string, number[]>();

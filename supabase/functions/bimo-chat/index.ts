@@ -1,9 +1,9 @@
-// Supabase Edge Function: BIMO AI (DeepSeek).
+// Supabase Edge Function: BIMO AI (Google Gemini, free tier).
 // Deploy : npx supabase functions deploy bimo-chat
-// Secret : npx supabase secrets set DEEPSEEK_API_KEY=sk-...   (opsional: DEEPSEEK_MODEL=deepseek-chat)
+// Secret : npx supabase secrets set GEMINI_API_KEY=...   (opsional: GEMINI_MODEL=gemini-3.5-flash-lite)
 // Hanya siswa yang sudah login (JWT pengguna Supabase) yang dapat memakai fungsi ini.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { CORS_HEADERS, ERROR_MESSAGES, chatWithBimo, createRateLimiter } from "../_shared/bimo.ts";
+import { CORS_HEADERS, ERROR_MESSAGES, chatWithBimo, configFromEnv, createRateLimiter } from "../_shared/bimo.ts";
 
 const allow = createRateLimiter(15, 5 * 60 * 1000); // 15 pesan / 5 menit per siswa
 
@@ -27,9 +27,6 @@ Deno.serve(async (req) => {
   if (!allow(data.user.id)) return json({ error: "rate_limited", message: ERROR_MESSAGES.rate_limited }, 429);
 
   const body = await req.json().catch(() => null);
-  const result = await chatWithBimo(body, {
-    apiKey: Deno.env.get("DEEPSEEK_API_KEY"),
-    model: Deno.env.get("DEEPSEEK_MODEL"),
-  });
+  const result = await chatWithBimo(body, configFromEnv((name) => Deno.env.get(name)));
   return json(result.body, result.status);
 });

@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ERROR_MESSAGES, chatWithBimo, createRateLimiter } from "../../../../supabase/functions/_shared/bimo";
+import { ERROR_MESSAGES, chatWithBimo, configFromEnv, createRateLimiter } from "../../../../supabase/functions/_shared/bimo";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Backend BIMO AI (DeepSeek) untuk `npm run dev` / Vercel.
- * API key dibaca dari DEEPSEEK_API_KEY di environment SERVER (tanpa awalan NEXT_PUBLIC_),
+ * Backend BIMO AI (Google Gemini, free tier) untuk `npm run dev` / Vercel.
+ * API key dibaca dari GEMINI_API_KEY di environment SERVER (tanpa awalan NEXT_PUBLIC_),
  * sehingga tidak pernah ikut terkirim ke browser.
  */
 export const runtime = "nodejs";
@@ -29,10 +29,7 @@ export async function POST(request: NextRequest) {
   if (!allow(who)) return NextResponse.json({ error: "rate_limited", message: ERROR_MESSAGES.rate_limited }, { status: 429 });
 
   const body = await request.json().catch(() => null);
-  const result = await chatWithBimo(body, {
-    apiKey: process.env.DEEPSEEK_API_KEY,
-    model: process.env.DEEPSEEK_MODEL,
-    apiUrl: process.env.DEEPSEEK_API_URL,
-  });
+  // GEMINI_API_KEY (+ GEMINI_MODEL opsional) dari environment server.
+  const result = await chatWithBimo(body, configFromEnv((name) => process.env[name]));
   return NextResponse.json(result.body, { status: result.status, headers: { "Cache-Control": "no-store" } });
 }

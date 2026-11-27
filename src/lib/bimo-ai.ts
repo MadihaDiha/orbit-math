@@ -23,7 +23,7 @@ export class BimoClientError extends Error {
 }
 
 const STATIC_MESSAGE =
-  "BIMO AI butuh server agar API key tetap aman, sedangkan versi demo ini adalah situs statis (GitHub Pages). Jalankan ORBIT MATH dengan `npm run dev` atau di Vercel/Supabase untuk mengaktifkannya — lihat README bagian \"BIMO AI\".";
+  "BIMO AI online butuh server agar GEMINI_API_KEY tetap aman, sedangkan versi demo ini adalah situs statis (GitHub Pages). Jalankan ORBIT MATH dengan `npm run dev` atau di Vercel/Supabase untuk mengaktifkannya — lihat README bagian \"BIMO AI\".";
 
 export function bimoBackend(): "next" | "supabase" | "static" {
   if (process.env.NEXT_PUBLIC_STATIC_EXPORT === "true") return "static";
@@ -69,6 +69,26 @@ export interface StoredMessage extends ChatMessage {
   id: string;
   step?: number;
   at: string;
+  /** true = dijawab BIMO Tutor Offline (tanpa AI online). */
+  offline?: boolean;
+}
+
+/** Status bimbingan BIMO Tutor Offline disimpan per siswa agar bisa dilanjutkan. */
+export function loadTutorState<T>(owner: string, fallback: T): T {
+  try {
+    const raw = window.localStorage.getItem(`orbit-math-bimo-tutor-v1:${owner}`);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function saveTutorState(owner: string, state: unknown) {
+  try {
+    window.localStorage.setItem(`orbit-math-bimo-tutor-v1:${owner}`, JSON.stringify(state));
+  } catch {
+    /* abaikan */
+  }
 }
 
 const MAX_HISTORY = 60;
@@ -95,6 +115,7 @@ export function saveHistory(owner: string, messages: StoredMessage[]) {
 export function clearHistory(owner: string) {
   try {
     window.localStorage.removeItem(keyFor(owner));
+    window.localStorage.removeItem(`orbit-math-bimo-tutor-v1:${owner}`);
   } catch {
     /* abaikan */
   }

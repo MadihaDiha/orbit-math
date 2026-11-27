@@ -10,7 +10,7 @@ import { BimoChat } from "./BimoChat";
 import { useDemoState } from "@/lib/demo/store";
 
 /** BIMO pemandu melayang: menyapa di setiap halaman & memberi petunjuk bila diketuk.
- *  Dari balon petunjuk, siswa juga bisa membuka chat BIMO AI (DeepSeek). */
+ *  Dari balon petunjuk, siswa juga bisa membuka chat BIMO AI (Gemini, dengan cadangan offline). */
 export function BimoGuide({ owner }: { owner?: string }) {
   const pathname = usePathname() || "/";
   const entry = useMemo(() => BIMO_TIPS.find((t) => pathname === t.prefix || pathname.startsWith(t.prefix + "/") || t.prefix === "/") ?? BIMO_TIPS[BIMO_TIPS.length - 1], [pathname]);

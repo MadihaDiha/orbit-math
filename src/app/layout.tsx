@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
-import { Nunito, Orbitron } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Starfield } from "@/components/cosmic/Starfield";
 import { GalaxyDecoration } from "@/components/cosmic/GalaxyDecoration";
 
-const display = Orbitron({ subsets: ["latin"], variable: "--font-display", weight: ["500", "700", "800", "900"] });
-const body = Nunito({ subsets: ["latin"], variable: "--font-body", weight: ["400", "600", "700", "800", "900"] });
+// Font yang sama dengan Google Fonts (Orbitron & Nunito, variable font subset latin), disimpan di proyek
+// agar build tidak bergantung pada unduhan Google Fonts (lihat src/app/fonts/README.md).
+const display = localFont({ src: "./fonts/orbitron-latin-variable.woff2", variable: "--font-display", weight: "400 900", display: "swap" });
+const body = localFont({ src: "./fonts/nunito-latin-variable.woff2", variable: "--font-body", weight: "200 1000", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "ORBIT MATH — Explore the Galaxy, Master Mathematics!", template: "%s · ORBIT MATH" },

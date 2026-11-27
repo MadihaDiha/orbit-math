@@ -17,6 +17,14 @@ const moves = [
   [join(root, "src", "app", "api"), join(hold, "api")],
 ];
 
+// Pulihkan file dari run sebelumnya yang terhenti di tengah jalan (mis. proses dihentikan paksa),
+// supaya middleware/route tidak pernah hilang dari src/.
+for (const [from, to] of moves) {
+  if (existsSync(to) && !existsSync(from)) {
+    renameSync(to, from);
+    console.log(`↺ Dipulihkan dari run sebelumnya: ${from.slice(root.length)}`);
+  }
+}
 rmSync(hold, { recursive: true, force: true });
 mkdirSync(hold, { recursive: true });
 const moved = [];
@@ -38,7 +46,7 @@ try {
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "",
       NEXT_PUBLIC_STATIC_EXPORT: "true",
       // API key AI tidak pernah dipakai di situs statis
-      DEEPSEEK_API_KEY: "",
+      GEMINI_API_KEY: "",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   });

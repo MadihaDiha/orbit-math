@@ -86,40 +86,41 @@ python -m unittest discover -s tests    # 35 unit test (juga memeriksa sinkron d
 
 Dari root proyek: `npm run gen:bank` (generate bank soal) dan `npm run test:py`.
 
-## BIMO AI (chatbot DeepSeek)
+## BIMO AI (chatbot Google Gemini — free tier)
 
 BIMO juga bisa menjadi **Asisten Belajar AI**. Buka dari BIMO yang melayang di pojok kanan bawah → **Tanya BIMO AI**.
 
 **Fungsi pedagogis (bukan sekadar menjawab):**
 - **6 langkah pemecahan masalah** — memahami situasi → diketahui & ditanya → mengenali konsep → menentukan strategi → menyelesaikan bertahap → memeriksa & refleksi. BIMO membimbing satu langkah per balasan dan menandai langkahnya (`[LANGKAH n]`), yang ditampilkan sebagai indikator 1–6 di panel chat.
-- **Cognitive Load Theory** — *intrinsic* (soal dipecah menjadi langkah kecil, satu konsep baru per balasan), *extraneous* (kalimat pendek, ±120 kata, tanpa LaTeX), *germane* (menghubungkan konsep seperti d = 2 × r dan π = K ÷ d, contoh nyata, refleksi).
-- Tidak memberi jawaban akhir sebelum siswa mencoba; jawaban salah dijelaskan letak kekeliruannya; jawaban benar diberi apresiasi spesifik. Konteks halaman/misi yang sedang dibuka ikut dikirim agar BIMO tetap pada materi Keliling Lingkaran.
-- Prompt sistem hanya ada di server (`supabase/functions/_shared/bimo.ts`), tidak bisa diubah dari browser.
+- **Cognitive Load Theory** — *intrinsic* (soal dipecah menjadi langkah kecil), *extraneous* (kalimat pendek, ±120 kata, tanpa LaTeX), *germane* (menghubungkan konsep seperti d = 2 × r dan π = K ÷ d, contoh nyata, refleksi).
+- Tidak memberi jawaban akhir sebelum siswa mencoba; jawaban salah dijelaskan letak kekeliruannya; jawaban benar diberi apresiasi spesifik. Konteks misi yang sedang dibuka ikut dikirim.
 
-**Keamanan API key:** key DeepSeek **tidak pernah** ada di browser maupun repositori. Browser hanya memanggil backend ORBIT MATH, lalu backend yang memanggil `https://api.deepseek.com/chat/completions`. Ada validasi pesan, batas laju (15 pesan / 5 menit per siswa), dan dengan Supabase hanya siswa yang login yang bisa memakai.
+**Dua mode, otomatis:**
+1. **Gemini (online)** — model free tier `gemini-3.5-flash-lite` (bisa diganti `GEMINI_MODEL`, mis. `gemini-3.6-flash`). Endpoint resmi `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`, key lewat header `x-goog-api-key` (tidak pernah di URL).
+2. **BIMO Tutor Offline** (`src/lib/bimo-tutor.ts`) — gratis, tanpa internet/akun. Dipakai otomatis bila key belum diisi, kuota gratis habis (HTTP 429), koneksi gagal, atau di situs statis GitHub Pages. Pesan dari mode ini diberi label **"Mode Offline"**.
 
-### Cara mengaktifkan
-Dapatkan API key di https://platform.deepseek.com/api_keys, lalu pilih salah satu:
+**Keamanan:** `GEMINI_API_KEY` hanya dibaca di server (route `/api/bimo-chat` atau Supabase Edge Function), tidak pernah di browser maupun repositori. Ada validasi pesan, batas laju (15 pesan / 5 menit per siswa), dan dengan Supabase hanya siswa yang login yang bisa memakai.
 
-**A. Lokal / Vercel (route `/api/bimo-chat`)** — isi di `.env.local` (lokal) atau *Vercel → Settings → Environment Variables*:
-```env
-DEEPSEEK_API_KEY=sk-xxxxxxxx        # TANPA awalan NEXT_PUBLIC_
-DEEPSEEK_MODEL=deepseek-chat        # opsional
-```
-Lalu jalankan ulang `npm run dev` (atau redeploy Vercel). `.env.local` sudah ada di `.gitignore`.
+### Cara mengaktifkan Gemini (gratis, tanpa billing)
+1. Buat key di **Google AI Studio**: https://aistudio.google.com/apikey (pilih proyek **tanpa** mengaktifkan billing agar tetap di free tier).
+2. Isi di `.env.local` (lokal) — file ini sudah ada di `.gitignore`:
+   ```env
+   GEMINI_API_KEY=isi-key-anda        # TANPA awalan NEXT_PUBLIC_
+   GEMINI_MODEL=gemini-3.5-flash-lite # opsional
+   ```
+3. Jalankan ulang `npm run dev`.
 
-**B. Supabase Edge Function** (jika memakai Supabase):
+**Vercel:** isi `GEMINI_API_KEY` di *Settings → Environment Variables*.
+**Supabase Edge Function:**
 ```bash
-npx supabase login
-npx supabase link --project-ref <project-ref>
-npx supabase secrets set DEEPSEEK_API_KEY=sk-xxxxxxxx
+npx supabase secrets set GEMINI_API_KEY=isi-key-anda
 npx supabase functions deploy bimo-chat
 ```
-Lalu set `NEXT_PUBLIC_BIMO_AI_BACKEND=supabase` di environment aplikasi.
+lalu set `NEXT_PUBLIC_BIMO_AI_BACKEND=supabase`.
 
-Tanpa API key, panel chat menampilkan pesan konfigurasi yang jelas (tidak ada key palsu). Situs demo statis di GitHub Pages tidak memiliki server, jadi di sana BIMO AI hanya menampilkan petunjuk cara mengaktifkannya.
+**Memastikan yang menjawab Gemini, bukan Mode Offline:** subjudul panel chat menulis "Asisten belajar Keliling Lingkaran" (bukan "Mode Offline · gratis"), balasan tidak berlabel "Mode Offline", dan di DevTools → Network permintaan `bimo-chat` berstatus **200** dengan field `"model": "gemini-..."`.
 
-**File terkait:** `supabase/functions/_shared/bimo.ts` (inti: prompt, validasi, panggilan DeepSeek, error), `src/app/api/bimo-chat/route.ts` (backend Next.js), `supabase/functions/bimo-chat/index.ts` (Edge Function), `src/lib/bimo-ai.ts` (klien & riwayat chat), `src/components/bimo/BimoChat.tsx` (panel chat), `tests/bimo-ai.test.ts`.
+**File terkait:** `supabase/functions/_shared/bimo.ts` (inti: prompt, validasi, panggilan Gemini, error), `src/app/api/bimo-chat/route.ts`, `supabase/functions/bimo-chat/index.ts`, `src/lib/bimo-ai.ts`, `src/lib/bimo-tutor.ts`, `src/components/bimo/BimoChat.tsx`, `tests/bimo-ai.test.ts`, `tests/bimo-tutor.test.ts`.
 
 ## Struktur Folder
 

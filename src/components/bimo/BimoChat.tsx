@@ -2,9 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { RotateCcw, Send, Trash2, X } from "lucide-react";
+import { Send, Trash2, WifiOff, X } from "lucide-react";
 import { BIMO_STEPS, LIMITS } from "../../../supabase/functions/_shared/bimo";
-import { BimoClientError, askBimo, clearHistory, loadHistory, saveHistory, type StoredMessage } from "@/lib/bimo-ai";
+import { BimoClientError, askBimo, bimoBackend, clearHistory, loadHistory, loadTutorState, saveHistory, saveTutorState, type StoredMessage } from "@/lib/bimo-ai";
+import { EMPTY_TUTOR, tutorReply, type TutorState } from "@/lib/bimo-tutor";
 import { getMission } from "@/content/missions";
 import { PLANETS } from "@/content/planets";
 import { playSfx } from "@/lib/sound";
@@ -83,26 +84,40 @@ function MessageText({ text }: { text: string }) {
   return <div className="space-y-1.5">{blocks}</div>;
 }
 
+const OFFLINE_NOTICE: Record<string, string> = {
+  static_site: "Mode Offline: versi demo ini tidak memakai AI internet, tapi Bimo tetap membimbingmu langkah demi langkah — gratis!",
+  not_configured: "Mode Offline: AI online belum diaktifkan, jadi Bimo memakai bimbingan offline (gratis).",
+  invalid_key: "Mode Offline: kunci Gemini API bermasalah, jadi Bimo memakai bimbingan offline.",
+  rate_limited: "Kuota gratis Gemini sedang penuh — sementara Bimo memakai bimbingan offline.",
+  default: "AI online sedang tidak bisa dihubungi — Bimo memakai bimbingan offline dulu.",
+};
+
 const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-/** Panel chat BIMO AI (DeepSeek) dengan riwayat, langkah pemecahan masalah, loading, dan error ramah. */
+/** Panel chat BIMO AI: Google Gemini (free tier) dengan cadangan otomatis BIMO Tutor Offline. */
 export function BimoChat({ owner, onClose }: { owner: string; onClose: () => void }) {
   const pathname = usePathname() || "/";
   const [messages, setMessages] = useState<StoredMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<{ code: string; message: string } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Riwayat percakapan per siswa
+  /** Status bimbingan BIMO Tutor Offline (dipakai saat AI online tidak tersedia). */
+  const tutorRef = useRef<TutorState>(EMPTY_TUTOR);
+  /** AI online dimatikan untuk sesi ini bila belum dikonfigurasi / saldo habis / situs statis. */
+  const aiOffRef = useRef<string | null>(bimoBackend() === "static" ? "static_site" : null);
+
+  // Riwayat percakapan & status bimbingan per siswa
   useEffect(() => {
     setMessages(loadHistory(owner));
+    tutorRef.current = loadTutorState(owner, EMPTY_TUTOR);
   }, [owner]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading, error]);
+  }, [messages, loading, notice]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -119,33 +134,48 @@ export function BimoChat({ owner, onClose }: { owner: string; onClose: () => voi
     setMessages(next);
     saveHistory(owner, next);
     setInput("");
-    setError(null);
     setLoading(true);
-    try {
-      const res = await askBimo(
-        next.map(({ role, content: c }) => ({ role, content: c })),
-        pageContext(pathname),
-      );
-      const reply: StoredMessage = { id: newId(), role: "assistant", content: res.reply, step: res.step, at: new Date().toISOString() };
+
+    const push = (reply: StoredMessage) => {
       const withReply = [...next, reply];
       setMessages(withReply);
       saveHistory(owner, withReply);
       playSfx("star");
+    };
+
+    /** BIMO Tutor Offline: gratis, tanpa internet — cadangan bila AI online tidak tersedia. */
+    const answerOffline = (reason: string | null) => {
+      const r = tutorReply(tutorRef.current, content);
+      tutorRef.current = r.state;
+      saveTutorState(owner, r.state);
+      if (reason) setNotice(OFFLINE_NOTICE[reason] ?? OFFLINE_NOTICE.default);
+      push({ id: newId(), role: "assistant", content: r.reply, step: r.step, offline: true, at: new Date().toISOString() });
+    };
+
+    try {
+      if (aiOffRef.current) {
+        await new Promise((resolve) => setTimeout(resolve, 450)); // jeda kecil agar terasa seperti berpikir
+        answerOffline(aiOffRef.current);
+        return;
+      }
+      const res = await askBimo(
+        next.map(({ role, content: c }) => ({ role, content: c })),
+        pageContext(pathname),
+      );
+      push({ id: newId(), role: "assistant", content: res.reply, step: res.step, at: new Date().toISOString() });
     } catch (e) {
-      const err = e instanceof BimoClientError ? e : new BimoClientError("network_error", "Koneksi ke BIMO AI gagal. Coba lagi, ya!");
-      setError({ code: err.code, message: err.message });
-      playSfx("wrong");
+      const code = e instanceof BimoClientError ? e.code : "network_error";
+      // Pertanyaan ditolak filter keamanan Gemini → jawab sopan, tanpa pindah ke mode offline
+      if (code === "blocked") {
+        push({ id: newId(), role: "assistant", content: (e as BimoClientError).message, step: 0, at: new Date().toISOString() });
+        return;
+      }
+      // Masalah konfigurasi/saldo tidak akan hilang sendiri → pakai mode offline selama sesi ini
+      if (["not_configured", "static_site", "invalid_key", "unauthorized"].includes(code)) aiOffRef.current = code;
+      answerOffline(code);
     } finally {
       setLoading(false);
     }
-  };
-
-  /** Kirim ulang pesan terakhir siswa setelah gagal. */
-  const retry = () => {
-    const lastUser = [...messages].reverse().find((m) => m.role === "user");
-    if (!lastUser) return;
-    const idx = messages.lastIndexOf(lastUser);
-    void send(lastUser.content, messages.slice(0, idx));
   };
 
   const onSubmit = (e: FormEvent) => {
@@ -161,11 +191,13 @@ export function BimoChat({ owner, onClose }: { owner: string; onClose: () => voi
 
   const reset = () => {
     clearHistory(owner);
+    tutorRef.current = EMPTY_TUTOR;
     setMessages([]);
-    setError(null);
+    setNotice(null);
   };
 
-  const configProblem = error && (error.code === "not_configured" || error.code === "static_site" || error.code === "invalid_key" || error.code === "insufficient_balance");
+  const lastBimo = [...messages].reverse().find((m) => m.role === "assistant");
+  const offlineMode = Boolean(lastBimo?.offline);
 
   return (
     <div
@@ -175,10 +207,10 @@ export function BimoChat({ owner, onClose }: { owner: string; onClose: () => voi
     >
       {/* Kepala panel */}
       <div className="flex items-center gap-3 border-b border-ice/15 bg-gradient-to-r from-royal/60 to-deep/80 px-4 py-3">
-        <Bimo mood={loading ? "thinking" : error ? "oops" : "happy"} action={loading ? "think" : "idle"} talking={loading} size={44} />
+        <Bimo mood={loading ? "thinking" : "happy"} action={loading ? "think" : "idle"} talking={loading} size={44} />
         <div className="min-w-0 flex-1">
           <p className="font-hud text-sm font-black tracking-wider">BIMO AI</p>
-          <p className="truncate text-[11px] text-soft/60">{loading ? "Bimo sedang berpikir..." : "Asisten belajar Keliling Lingkaran"}</p>
+          <p className="truncate text-[11px] text-soft/60">{loading ? "Bimo sedang berpikir..." : offlineMode ? "Mode Offline · gratis" : "Asisten belajar Keliling Lingkaran"}</p>
         </div>
         <button type="button" onClick={reset} className="rounded-full p-2 text-soft/50 hover:bg-white/10 hover:text-soft" aria-label="Mulai percakapan baru" title="Mulai percakapan baru">
           <Trash2 size={16} />
@@ -206,7 +238,13 @@ export function BimoChat({ owner, onClose }: { owner: string; onClose: () => voi
 
       {/* Pesan */}
       <div ref={listRef} className="scrollbar-thin flex-1 space-y-3 overflow-y-auto px-4 py-3" aria-live="polite">
-        {messages.length === 0 && !error && (
+        {notice && (
+          <p className="flex items-start gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold" role="status">
+            <WifiOff size={14} className="mt-0.5 shrink-0" /> {notice}
+          </p>
+        )}
+
+        {messages.length === 0 && (
           <div className="space-y-3">
             <div className="rounded-2xl rounded-tl-md bg-royal/30 px-3.5 py-2.5 text-sm">
               Halo, penjelajah! Aku <b className="text-ice">BIMO AI</b>. Tanyakan apa saja tentang <b className="text-ice">keliling lingkaran</b>, atau kirim soal yang sedang kamu kerjakan — kita pecahkan bersama, langkah demi langkah! 🚀
@@ -229,6 +267,7 @@ export function BimoChat({ owner, onClose }: { owner: string; onClose: () => voi
           ) : (
             <div key={m.id} className="mr-6 rounded-2xl rounded-tl-md border border-ice/15 bg-royal/30 px-3.5 py-2.5 text-sm leading-relaxed">
               <MessageText text={m.content} />
+              {m.offline && <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-soft/50"><WifiOff size={10} /> Mode Offline</span>}
             </div>
           ),
         )}
@@ -244,16 +283,6 @@ export function BimoChat({ owner, onClose }: { owner: string; onClose: () => voi
           </div>
         )}
 
-        {error && (
-          <div className={`rounded-2xl border px-3.5 py-3 text-sm ${configProblem ? "border-gold/40 bg-gold/10 text-gold" : "border-rose-300/40 bg-rose-500/10 text-rose-100"}`} role="alert">
-            <p>{error.message}</p>
-            {!configProblem && messages.some((m) => m.role === "user") && (
-              <button type="button" onClick={retry} className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-current px-3 py-1 text-xs font-bold hover:bg-white/10">
-                <RotateCcw size={13} /> Coba lagi
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Input */}
