@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fmissions\u002F[slug]","\u002Fplayground\u002F[game]","\u002Ftraining\u002F[level]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
